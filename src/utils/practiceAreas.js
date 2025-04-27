@@ -15,7 +15,7 @@ export const practiceAreas = [
 "International trade",
 "Intellectual property",
 "Litigation",
-"civil and criminal",
+"Civil and Criminal",
 "Mergers, acquisitions and restructuring",
 "Telecommunications, media and Technology",
 "Information Technology",

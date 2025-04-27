@@ -253,6 +253,7 @@ const UsersTable = () => {
     setLoading(true);                     // ← start spinner
     try {
       const resp = await adminGetUsers(page, limit);
+      console.log("Users ", resp);
       setUsers(resp.reverse());
     } catch (error) {
       console.error('Error fetching users', error);

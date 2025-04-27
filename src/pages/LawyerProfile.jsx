@@ -158,38 +158,83 @@
 // };
 
 // export default LawyerProfile;
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaCaretDown } from 'react-icons/fa';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { adminGetLawyerByUserId } from '../api/api';
+import { practiceAreas } from '../utils/practiceAreas';
+import Spinner from '../components/Spinner';
+import Loader from '../components/Loader';
 
 const LawyerProfile = () => {
   const [formData, setFormData] = useState({
-    firstName: 'Bisola',
-    lastName: 'Akinlade',
-    email: 'bisolaakin@gmail.com',
-    phone: '09087878666',
-    state: 'Lagos State',
-    scn: 'SCN009895',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    state: "",
+    supremeCourtNumber: "",
     bio: 'There are many variations of passages of Lorem Ipsum available...',
+    aboutLawyer: "",
     nba: 'Eti-Osa Branch',
+    nbabranchAffiliation: "",
     firm: 'Synergy Attornies',
-    password: '',
-    practiceArea: '',
+    password: "",
+    practiceArea: "",
   });
+
+  const [lawyerData, setLawyerData] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (evt) => {
+    evt.preventDefault();
     toast.success('Lawyer profile updated successfully!');
     console.log('Updated Lawyer Data:', formData);
     setFormData((prev) => ({ ...prev, password: '' }));
   };
+
+  const { userId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [loading, setLoading] = useState(true);
+
+  const fetchLawyerByUserId = async () => {
+    try {
+      
+      const resp = await adminGetLawyerByUserId(userId);
+      console.log("Lawyer profile - ", resp);
+      const lawyerData = resp.data;
+      setLawyerData(lawyerData);
+
+      setFormData({
+        firstName: lawyerData?.user?.firstName,
+        lastName: lawyerData?.user?.lastName,
+        email: lawyerData?.user?.email,
+        phoneNumber: lawyerData?.user?.phoneNumber || "Not Captured",
+        state: lawyerData?.state,
+        supremeCourtNumber: lawyerData?.supremeCourtNumber,
+        aboutLawyer: lawyerData?.aboutLawyer || "Not Captured",
+        nbabranchAffiliation: lawyerData?.nbabranchAffiliation || "Not Captured"
+      })
+
+    } catch (error) {
+        const errorMessage = error.error || "Something went wrong in retrieving lawyers details";
+        toast.error(errorMessage, { toastId: "fetchLawyerByUserIdError"});
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchLawyerByUserId()
+  }, [])
 
   return (
     <div className="lawyer-profile">
@@ -199,7 +244,7 @@ const LawyerProfile = () => {
       <div className="left-section">
         <div className="profile-summary">
           <img
-            src="https://randomuser.me/api/portraits/women/44.jpg"
+            src="https://sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png"
             alt="Profile"
             className="profile-img"
           />
@@ -213,11 +258,10 @@ const LawyerProfile = () => {
           <div className="practice-box">
             <h3 className="practice-title">Practice Areas</h3>
             <ul className="practice-list">
-              <li><input type="checkbox" checked readOnly /> Employment</li>
-              <li><input type="checkbox" checked readOnly /> Human Rights</li>
-              <li><input type="checkbox" checked readOnly /> International trade</li>
-              <li><input type="checkbox" checked readOnly /> Intellectual property</li>
-              <li><input type="checkbox" checked readOnly /> Litigation</li>
+              {lawyerData?.practiceAreas?.map((practiceArea) => (
+                <li><input type="checkbox" checked readOnly /> {practiceArea} </li>
+              ))}
+
             </ul>
           </div>
         </div>
@@ -227,13 +271,16 @@ const LawyerProfile = () => {
           {/* <label htmlFor="practice-select" className="visually-hidden">Select practice area</label> */}
           <div className="dropdown-wrapper" style={{ width: '100%', maxWidth: '220px' }}>
             <select id="practice-select" name="practiceArea" value={formData.practiceArea} onChange={handleChange}>
-              <option value="">--Select practice area--</option>
-              <option value="criminal">Criminal Lawyer</option>
-              <option value="real-estate">Real Estate</option>
-              <option value="corporate">Corporate Law</option>
-              <option value="tax">Tax Law</option>
-              <option value="family">Family Law</option>
-              <option value="environmental">Environmental Law</option>
+              <option value="" aria-invalid>--Select practice area--</option>
+              {practiceAreas
+                .filter((practiceArea) => 
+                  !lawyerData.practiceAreas?.some(
+                    (selectedArea) => selectedArea?.toLowerCase() === practiceArea?.toLowerCase()
+                  )
+                ).map((practiceArea) => (
+                  <option value={practiceArea}> {practiceArea} </option>
+                ))}
+
             </select>
             <FaCaretDown className="dropdown-icon" />
           </div>
@@ -246,6 +293,9 @@ const LawyerProfile = () => {
 
       {/* Right Section */}
       <div className="right-section">
+        {/* Loading state - show loader */}
+        {loading ? <Loader /> : null}
+
         <h2 className="section-title">Lawyer Profile Setting</h2>
         <form onSubmit={handleSubmit}>
           <div className="info-grid">
@@ -262,8 +312,8 @@ const LawyerProfile = () => {
               <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
             </div>
             <div>
-              <label className='label' htmlFor="phone">Phone number</label>
-              <input id="phone" name="phone" type="text" value={formData.phone} onChange={handleChange} required />
+              <label className='label' htmlFor="phoneNumber">Phone number</label>
+              <input id="phoneNumber" name="phoneNumber" type="text" value={formData.phoneNumber} onChange={handleChange} required />
             </div>
             <div>
               <label className='label' htmlFor="state">State of Practice</label>
@@ -272,28 +322,25 @@ const LawyerProfile = () => {
               </select>
             </div>
             <div>
-              <label className='label' htmlFor="scn">SCN No.</label>
-              <input id="scn" name="scn" type="text" value={formData.scn} onChange={handleChange} required />
+              <label className='label' htmlFor="supremeCourtNumber">SCN No.</label>
+              <input id="supremeCourtNumber" name="supremeCourtNumber" type="text" value={formData.supremeCourtNumber} onChange={handleChange} required />
             </div>
             <div style={{ gridColumn: '1 / -1', marginBottom: '2rem' }}>
-              <label className='label' htmlFor="bio">About Lawyer</label>
-              <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} required />
+              <label className='label' htmlFor="aboutLawyer">About Lawyer</label>
+              <textarea id="aboutLawyer" name="aboutLawyer" value={formData.aboutLawyer} onChange={handleChange} required />
             </div>
           </div>
 
           <div className="label-grid">
             <div>
-              <label className='label' htmlFor="nba">NBA Affiliation</label>
-              <input id="nba" name="nba" type="text" value={formData.nba} onChange={handleChange} required />
+              <label className='label' htmlFor="nbabranchAffiliation">NBA Affiliation</label>
+              <input id="nbabranchAffiliation" name="nbabranchAffiliation" type="text" value={formData.nbabranchAffiliation} onChange={handleChange} required />
             </div>
-            <div>
+            {/* <div>
               <label className='label' htmlFor="firm">Law Firm</label>
               <input id="firm" name="firm" type="text" value={formData.firm} onChange={handleChange} required />
-            </div>
-            <div>
-              <label className='label' htmlFor="password">Reset Password</label>
-              <input id="password" name="password" type="password" placeholder="Enter new password" value={formData.password} onChange={handleChange} />
-            </div>
+            </div> */}
+       
           </div>
 
           <div className="button-row">

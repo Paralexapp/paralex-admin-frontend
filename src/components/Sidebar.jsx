@@ -220,7 +220,7 @@ export default function Sidebar({ open, setOpen }) {
           </div>
 
           <div className="admin-info">
-            <p className="admin-name">Zainab S.</p>
+            <p className="admin-name">Admin</p>
             <a
               href="/"
               className="logout-link"
