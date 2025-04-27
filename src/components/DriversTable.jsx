@@ -61,20 +61,20 @@ const driversData = [
     role: 'Driver',
     selected: false,
   },
-  {
-    name: 'Jane Doe',
-    date: '2024-08-22',
-    email: 'janedoe@gmail.com',
-    role: 'Driver',
-    selected: false,
-  },
-  {
-    name: 'Peter Griffin',
-    date: '2024-07-01',
-    email: 'pgriffin@gmail.com',
-    role: 'Driver',
-    selected: false,
-  },
+  // {
+  //   name: 'Jane Doe',
+  //   date: '2024-08-22',
+  //   email: 'janedoe@gmail.com',
+  //   role: 'Driver',
+  //   selected: false,
+  // },
+  // {
+  //   name: 'Peter Griffin',
+  //   date: '2024-07-01',
+  //   email: 'pgriffin@gmail.com',
+  //   role: 'Driver',
+  //   selected: false,
+  // },
 ];
 
 const DriversTable = () => {
