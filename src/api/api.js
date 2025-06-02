@@ -55,7 +55,7 @@ const handleRequestError = (error) => {
         throw {
             success: false,
             status: error.response?.status || 400,
-            error: error.response.data?.error || "An error occurred",
+            error: error.response.data?.error || error.response?.data || "An error occurred",
             errors: error.response.data?.errors || []
         }
     } else if (error.code === "ECONNABORTED"){
@@ -103,6 +103,31 @@ export const adminGetBailBonds = async () => {
     return handleAdminRequest('GET', 'admin/get-bail-bond-requests')
 }
 
+/** Admin Get All Admins */
+export const adminGetAllAdmins = async () => {
+    return handleAdminRequest('GET', 'admin/get-all-admins')
+}
+
+/** Admin Get Notifications */
+export const adminGetNotifications = async () => {
+    return handleAdminRequest('GET', 'admin/get-admin-notification')
+}
+
+/** handleAdmindminNews  */
+export const handleAdminAddNews= async (formData) => {
+    return handleAdminRequest('POST', 'api/news/post', formData);
+}
+
+/** Admin Get Lawyer by User Id */
+export const adminGetLawyerByUserId = async (userId) => {
+    return handleAdminRequest('GET', `admin/get-lawyer-by-userId?userId=${userId}`)
+}
+
+/** Admin Get User by User Id */
+export const adminGetUserByUserId = async (userId) => {
+    return handleAdminRequest('GET', `api/v1/auth/get-user-by-id/${userId}`)
+}
+
 /** handleAdminForgotPassword  */
 export const handleAdminForgotPassword = async (formData) => {
     return handleAdminRequest('POST', 'api/v1/admin/forgot-password', formData);
@@ -116,18 +141,6 @@ export const resetAdminPassword = async (formData) => {
 export const updateAdminPassword = async (formData) => {
     return handleAdminRequest('PUT', 'api/v1/admin/update-password', formData);
 }
-/** resetUserpassword */
-export const adminResetUserPassword = async (formData) => {
-    return handleAdminRequest('PUT', 'api/v1/admin/reset-user-password', formData);
-}
-
-export const handleAddUser = async (formData) => {
-    return handleAdminRequest('POST', 'api/v1/admin/add-user', formData);
-}
-
-export const uploadUsers = async (formData) => {
-    return handleAdminRequest('POST', 'api/v1/admin/upload-users', formData);
-}
 
 export const updateUser = async (formData) => {
     return handleAdminRequest('PUT', 'api/v1/admin/update-user', formData);
@@ -136,7 +149,6 @@ export const updateUser = async (formData) => {
 export const deleteUser = async (formData) => {
     return handleAdminRequest('POST', 'api/v1/admin/delete-user', formData);
 }
-
 
 /** Admin Search Users */
 export const adminSearchUsers = async (searchTerm, pageNum=1, limit=15) => {
