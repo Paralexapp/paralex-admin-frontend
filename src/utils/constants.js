@@ -1,4 +1,4 @@
-export const BASE_URL = "https://paralex-app-fddb148a81ad.herokuapp.com";
+export const BASE_URL = "https://paralex-be.onrender.com";
 
 //=== PATH/ROUTE urls ===//
 
