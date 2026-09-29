@@ -1,145 +1,83 @@
-import React, { useEffect, useState } from "react";
-import { FaArrowRight, FaUser } from "react-icons/fa";
-import "../App.css";
-import { adminGetNotifications } from "../api/api";
-import { toast, ToastContainer } from "react-toastify";
-import Spinner from "../components/Spinner";
+import { useState } from 'react';
+import { PiBell, PiBellRinging } from 'react-icons/pi';
+import useAsync from '../hooks/useAsync';
+import { adminGetNotifications } from '../api/api';
+import { formatDate, toTimestamp } from '../utils/format';
+import PageHeader from '../components/ui/PageHeader';
+import { Card } from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
 
-const allNotifications = [
-  {
-    id: 1,
-    name: "Jane Felicity",
-    message: "New Lawyer registration \"Jane Felicity\" registered as lawyer",
-    time: "26m ago",
-    avatar: "https://randomuser.me/api/portraits/women/79.jpg",
-    isNew: true,
-  },
-  {
-    id: 2,
-    name: "View Submission",
-    message: "New Bail bond Entry \"View Submission\"",
-    time: "40m ago",
-    avatar: null,
-    initial: "A",
-    isNew: true,
-  },
-  {
-    id: 3,
-    name: "John adebayo",
-    message: "New User registration \"John adebayo\" registered as User",
-    time: "1 days ago",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    isNew: false,
-  },
-  {
-    id: 4,
-    name: "John adebayo",
-    message: "New Lawyer registration \"John adebayo\" registered as lawyer",
-    time: "26m ago",
-    avatar: null,
-    icon: <FaUser />,
-    isNew: true,
-  },
-  {
-    id: 5,
-    name: "Samuel Bright",
-    message: "New Bail bond Entry \"Samuel Bright\"",
-    time: "2 days ago",
-    avatar: "https://randomuser.me/api/portraits/men/75.jpg",
-    isNew: false,
-  },
-  {
-    id: 6,
-    name: "Blessing James",
-    message: "New User registration \"Blessing James\" registered as User",
-    time: "3 days ago",
-    avatar: "https://randomuser.me/api/portraits/women/82.jpg",
-    isNew: false,
-  },
-];
+const PAGE = 10;
+
+// Quoted names in messages ("Jane Doe") are highlighted
+const highlight = (message = '') =>
+  message.split('"').map((part, idx) =>
+    idx % 2 === 1 ? (
+      <span key={idx} className="font-medium text-stone-900">
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
 
 const NotificationPage = () => {
-  const [visibleCount, setVisibleCount] = useState(4);
-  const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState([]);   //Initial notifications state
-  // const visibleNotifications = allNotifications.slice(0, visibleCount);
-  const visibleNotifications = notifications.slice(0, visibleCount);
-
-  const loadMore = () => {
-    setVisibleCount((prev) => prev + 2);
-  };
-
-   const fetchAdminNotifications = async () => {
-  
-      setLoading(true);
-      try {
-        const resp = await adminGetNotifications();
-        console.log("Admin notifications", resp);
-        setNotifications(resp);
-        
-      } catch (error) {
-        console.error("Error from fetching notifications ", error);
-        const errorMessage = error.error || "Failed to fetch admin notifications";
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    }
-  
-    useEffect(() => {
-      fetchAdminNotifications();
-    }, []);
-  
+  const { data, loading, error, reload } = useAsync(adminGetNotifications);
+  const [visible, setVisible] = useState(PAGE);
+  const notifications = (Array.isArray(data) ? data : []).slice().sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt));
+  const unread = notifications.filter((n) => !n.readInbox).length;
 
   return (
-    <div className="notification-wrapper">
-      <ToastContainer position="top-right" autoClose={3000} />
-
-      <h2 className="notification-title">Notifications</h2>
-
-      <div className="notification-list">
-        {/* Shared Spinner */}
-        <Spinner loading={loading} height="200px" />
-                
-        {!loading && visibleNotifications.map((n) => (
-          <div key={n.id} className="notification-card">
-            <div className="notification-avatar-wrapper">
-              {n.avatar ? (
-                <img src={n.avatar} alt="avatar" className="notification-avatar-img" />
-              ) : n.initial ? (
-                <span className="notification-initial">{n.initial}</span>
-              ) : (
-                <FaUser className="notification-icon" />
-              )}
-              {n.isNew && <span className="notification-status"></span>}
-            </div>
-
-            <div className="notification-message">
-              <p className="notification-label">Notification</p>
-              <p className="notification-text">
-                {n.message.split(`"`).map((part, idx) =>
-                  idx % 2 === 1 ? (
-                    <span key={idx} className="notification-highlight">
-                      {part}
-                    </span>
-                  ) : (
-                    part
-                  )
-                )}
-              </p>
-              <p className="notification-time">{n.time}</p>
-            </div>
-          </div>
-        ))}
-
-      </div>
-
-      <div className="notification-footer">
-        <button onClick={loadMore} className="notification-button">
-          Load More <FaArrowRight className="notification-button-icon" />
-        </button>
-      </div>
-    </div>
+    <>
+      <PageHeader title="Notifications" description={loading ? null : unread ? `${unread} unread` : "You're all caught up."} />
+      <Card className="overflow-hidden">
+        {loading ? (
+          <ul className="divide-y divide-stone-100">
+            {Array.from({ length: 5 }, (_, i) => (
+              <li key={i} className="flex gap-3 p-5">
+                <Skeleton className="size-9 rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-2/3" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : error ? (
+          <ErrorState message={error} onRetry={reload} />
+        ) : notifications.length === 0 ? (
+          <EmptyState icon={PiBell} title="No notifications" description="New registrations and bail bond submissions will show up here." />
+        ) : (
+          <>
+            <ul className="divide-y divide-stone-100">
+              {notifications.slice(0, visible).map((n) => (
+                <li key={n.id} className={`flex gap-3 p-5 ${n.readInbox ? '' : 'bg-brand-50/40'}`}>
+                  <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${n.readInbox ? 'bg-stone-100 text-stone-500' : 'bg-brand-100 text-brand-800'}`}>
+                    <PiBellRinging className="size-[18px]" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-medium text-stone-900">{n.title || 'Notification'}</p>
+                      <span className="tabular shrink-0 text-xs text-stone-400">{formatDate(n.createdAt)}</span>
+                    </div>
+                    <p className="mt-0.5 text-sm text-stone-600">{highlight(n.message)}</p>
+                  </div>
+                  {!n.readInbox && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-accent-500" aria-label="Unread" />}
+                </li>
+              ))}
+            </ul>
+            {visible < notifications.length && (
+              <div className="border-t border-stone-100 p-4 text-center">
+                <Button variant="secondary" size="sm" onClick={() => setVisible((v) => v + PAGE)}>
+                  Show more
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </Card>
+    </>
   );
 };
 

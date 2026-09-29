@@ -1,4 +1,5 @@
-export const BASE_URL = "https://paralex-be.onrender.com";
+// Set VITE_API_BASE_URL at build time (see .env.example); the fallback is the live staging API.
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://staging.api.mobile.paralexlogistics.com";
 
 //=== PATH/ROUTE urls ===//
 
@@ -14,15 +15,6 @@ export const ADMIN_LAWYERS_URL = "/admin/lawyers";
 export const ADMIN_DRIVERS_URL = "/admin/drivers";
 export const ADMIN_BAILBOND_URL = "/admin/bailbond";
 export const ADMIN_LOGISTICS_URL = "/admin/logistics";
-export const ADMIN_LICSVERIFICATION_URL = "/admin/licsverification";
-export const ADMIN_BIMSSYSTEM_URL = "/admin/bims-system";
 // export const ADMIN_VERIFYLAWYER_URL = "/admin/verify-lawyer";
 export const ADMIN_VERIFYLAWYER_URL = "https://www.nigerianbar.org.ng/find-a-lawyer";
 export const ADMIN_NOTIFICATIONS_URL = "/admin/notifications";
-
-
-
-
-
-
-

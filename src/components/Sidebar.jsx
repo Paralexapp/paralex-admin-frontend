@@ -1,261 +1,99 @@
-// import { Link, NavLink, useNavigate } from 'react-router-dom';
-// import { AiFillDashboard, AiOutlineSetting } from 'react-icons/ai';
-// import { PiUsersThreeFill } from 'react-icons/pi';
-// // import { GiClawHammer } from 'react-icons/gi';
-// import { BiSolidBusSchool } from 'react-icons/bi';
-// import { IoShieldCheckmark } from "react-icons/io5";
-
-// import { IoIosCheckmarkCircle, IoMdNotifications } from 'react-icons/io';
-// import logo from '../assets/logz.png';
-// import '../App.css';
-// import { IoIosCloseCircle } from 'react-icons/io';
-// import { ADMIN_BAILBOND_URL, ADMIN_BIMSSYSTEM_URL, ADMIN_DASHBOARD_URL, ADMIN_DRIVERS_URL, ADMIN_LAWYERS_URL, ADMIN_LICSVERIFICATION_URL, ADMIN_NOTIFICATIONS_URL, ADMIN_SETTINGS_URL, ADMIN_USERS_URL, ADMIN_VERIFYLAWYER_URL } from '../utils/constants';
-
-// import { FaUserShield, FaGears } from 'react-icons/fa6';
-// import { BsFillGearFill } from 'react-icons/bs';
-// import { MdPostAdd } from 'react-icons/md';
-// import { GrTransaction } from "react-icons/gr";
-// // import { IoIosLogOut } from "react-icons/io";
-// import { logoutAdmin } from '../api/authHelper';
-// import { FaGavel } from 'react-icons/fa'
-
-// const navLinks = [
-//   { to: ADMIN_DASHBOARD_URL, label: 'Dashboard', icon: <AiFillDashboard /> },
-//   { to: ADMIN_LAWYERS_URL, label: 'Lawyers', icon: <FaGavel /> },
-//   { to: '/admin/users', label: 'Users', icon: <PiUsersThreeFill /> },
-//   { to: '/admin/drivers', label: 'Drivers', icon: <BiSolidBusSchool /> },
-//   { to: '/admin/bailbond', label: 'Bail Bond', icon: <IoMdNotifications /> },
-//   { to: '/admin/logistics', label: 'Logistics', icon: <FaUserShield /> },
-//   {
-//     to: ADMIN_LICSVERIFICATION_URL,
-//     label: 'LICS Verification',
-//     icon: <IoIosCheckmarkCircle />,
-//   },
-//   { to: '/admin/bims-system', label: 'BIMS', icon: <BsFillGearFill /> },
-//   { to: '/admin/transaction', label: 'Transactions', icon: <GrTransaction/> },
-//   { to: 'https://www.nigerianbar.org.ng/find-a-lawyer', label: 'Verify Lawyer', icon: < IoShieldCheckmark /> },
-//   { to: '/admin/post-news', label: 'Post News', icon: <MdPostAdd /> },
-//   { to: '/admin/settings', label: 'Admin Settings', icon: <FaGears /> },
-//   // { to: '/', label: 'Logout', icon: <IoIosLogOut/> },
-// ];
-
-// const Sidebar = ({ open, setOpen }) => {
-
-//   const navigate = useNavigate(); //Initialize the navigate function
-
-//   return (
-//     <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
-//       {open && (
-//         <button className="sidebar-close" onClick={() => setOpen(false)}>
-//           ✕
-//         </button>
-//       )}
-
-//       <div className="sidebar-top">
-//         <div className="sidebar-logo">
-//           <Link to="/admin/dashboard"><img src={logo} alt="Logo" className="logo-img" /></Link>
-//         </div>
-
-//         <nav className="sidebar-nav">
-//           {navLinks.map((link, index) => (
-//             <NavLink
-//               key={index}
-//               to={link.to}
-//               target={link.label == "Verify Lawyer" || link.label == "LICS Verification" || link.label == "BIMS" ? '_blank' : '_self' }
-//               className={({ isActive }) =>
-//                 `sidebar-link ${isActive ? 'active' : ''}`
-//               }
-//               onClick={() => setOpen(false)} // closes sidebar on mobile link click
-//             >
-//               <span className="sidebar-icon">{link.icon}</span>
-//               <span className="sidebar-label">{link.label}</span>
-//             </NavLink>
-//           ))}
-
-           
-
-
-//         </nav>
-//       </div>
-
-
-//       <div className="sidebar-bottom">
-//         <div className="avatar-wrapper">
-//           <div className="admin-avatar">
-//             <span className="avatar-icon">👤</span>
-//             <span className="status-dot"></span>
-//           </div>
-//         </div>
-
-//         <div className="admin-info">
-//           <p className="admin-name">Zainab S.</p>
-//           <NavLink
-//               key={"logout"}
-//               to={"/"}
-//               className={({ isActive }) =>
-//                 `sidebar-link ${isActive ? 'active' : ''}`
-//               }
-//               onClick={() => logoutAdmin() && setOpen(false) } // closes sidebar on mobile link click
-//             >
-//               {/* <span className="sidebar-icon">{<IoIosLogOut/>}</span> */}
-//               <span className="sidebar-label">{"Log out"}</span>
-//             </NavLink>
-//         </div>
-//         {/* <AiOutlineSetting className="admin-settings-icon" /> */}
-//       </div>
-
-//     </aside>
-//   );
-// };
-
-// export default Sidebar;
-import React, { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { AiFillDashboard } from 'react-icons/ai';
-import { PiUsersThreeFill } from 'react-icons/pi';
-import { BiSolidBusSchool } from 'react-icons/bi';
-import { IoShieldCheckmark } from 'react-icons/io5';
-import { IoIosCheckmarkCircle, IoMdNotifications } from 'react-icons/io';
-import { FaUserShield } from 'react-icons/fa6';
-import { BsFillGearFill } from 'react-icons/bs';
-import { MdPostAdd } from 'react-icons/md';
-import { GrTransaction } from 'react-icons/gr';
-import { FaGavel } from 'react-icons/fa';
-import { FaGears } from 'react-icons/fa6';
+import { Link, useLocation } from 'react-router-dom';
+import { PiArrowSquareOut, PiSignOut, PiX } from 'react-icons/pi';
 import logo from '../assets/logz.png';
-import '../App.css';
-import {
-  ADMIN_BAILBOND_URL,
-  ADMIN_BIMSSYSTEM_URL,
-  ADMIN_DASHBOARD_URL,
-  ADMIN_DRIVERS_URL,
-  ADMIN_LAWYERS_URL,
-  ADMIN_LICSVERIFICATION_URL,
-  ADMIN_LOGISTICS_URL,
-  ADMIN_SETTINGS_URL,
-  ADMIN_USERS_URL,
-  ADMIN_VERIFYLAWYER_URL
-} from '../utils/constants';
-import { logoutAdmin } from '../api/authHelper';
+import { navSections, isActive } from '../layouts/navigation';
+import { getAdminProfile } from '../api/authHelper';
+import Avatar from './ui/Avatar';
 
-const navLinks = [
-  { to: ADMIN_DASHBOARD_URL, label: 'Dashboard', icon: <AiFillDashboard />, external: false },
-  { to: ADMIN_LAWYERS_URL, label: 'Lawyers', icon: <FaGavel />, external: false },
-  { to: ADMIN_USERS_URL, label: 'Users', icon: <PiUsersThreeFill />, external: false },
-  { to: ADMIN_DRIVERS_URL, label: 'Drivers', icon: <BiSolidBusSchool />, external: false },
-  { to: ADMIN_BAILBOND_URL, label: 'Bail Bond', icon: <IoMdNotifications />, external: false },
-  { to: ADMIN_LOGISTICS_URL, label: 'Logistics', icon: <FaUserShield />, external: false },
-  { to: ADMIN_LICSVERIFICATION_URL, label: 'LICS Verification', icon: <IoIosCheckmarkCircle />, external: true },
-  { to: ADMIN_BIMSSYSTEM_URL, label: 'BIMS', icon: <BsFillGearFill />, external: false },
-  { to: '/admin/transaction', label: 'Transactions', icon: <GrTransaction />, external: false },
-  { to: ADMIN_VERIFYLAWYER_URL, label: 'Verify Lawyer', icon: <IoShieldCheckmark />, external: true },
-  { to: '/admin/post-news', label: 'Post News', icon: <MdPostAdd />, external: false },
-  { to: ADMIN_SETTINGS_URL, label: 'Admin Settings', icon: <FaGears />, external: false }
-];
+export default function Sidebar({ open, setOpen, onLogout }) {
+  const { pathname } = useLocation();
+  const admin = getAdminProfile();
 
-export default function Sidebar({ open, setOpen }) {
-  const navigate = useNavigate();
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
-  const handleLogoutClick = (e) => {
-    e.preventDefault();
-    setShowLogoutConfirm(true);
-  };
-
-  const handleConfirmLogout = () => {
-    logoutAdmin();
-    setOpen(false);
-    navigate('/');
-  };
-
-  const handleCancelLogout = () => {
-    setShowLogoutConfirm(false);
-  };
+  const linkClass = (active) =>
+    `group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition duration-200 ${
+      active ? 'bg-white/10 text-white' : 'text-brand-200/80 hover:bg-white/5 hover:text-white'
+    }`;
 
   return (
-    <>
-      <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>  
-        {open && (
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col print:hidden bg-brand-950 transition-transform duration-300 lg:translate-x-0 ${
+        open ? 'translate-x-0' : '-translate-x-full'
+      }`}
+      aria-label="Main navigation"
+    >
+      {/* Soft brand glow so the panel isn't a flat slab */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_at_top_left,rgb(127_58_132/0.45),transparent_65%)]" />
+
+      <div className="relative flex h-16 items-center justify-between px-5">
+        <Link to="/admin/dashboard" onClick={() => setOpen(false)}>
+          <img src={logo} alt="Paralex" className="h-7 w-auto" />
+        </Link>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label="Close menu"
+          className="inline-flex size-8 items-center justify-center rounded-lg text-brand-200 hover:bg-white/10 hover:text-white lg:hidden"
+        >
+          <PiX className="size-5" />
+        </button>
+      </div>
+
+      <nav className="no-scrollbar relative flex-1 space-y-6 overflow-y-auto px-3 py-4">
+        {navSections.map((section) => (
+          <div key={section.label}>
+            <p className="mb-1.5 px-3 text-[11px] font-medium tracking-wider text-brand-300/60 uppercase">{section.label}</p>
+            <ul className="space-y-0.5">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item, pathname);
+                return (
+                  <li key={item.label}>
+                    {item.external ? (
+                      <a href={item.href} target="_blank" rel="noopener noreferrer" className={linkClass(false)}>
+                        <Icon className="size-[18px]" />
+                        <span className="flex-1">{item.label}</span>
+                        <PiArrowSquareOut className="size-3.5 opacity-50" />
+                      </a>
+                    ) : (
+                      <Link
+                        to={item.to}
+                        onClick={() => setOpen(false)}
+                        aria-current={active ? 'page' : undefined}
+                        className={linkClass(active)}
+                      >
+                        <span className={`relative ${active ? 'text-white' : ''}`}>
+                          <Icon className="size-[18px]" />
+                        </span>
+                        <span className="flex-1">{item.label}</span>
+                        {active && <span className="size-1.5 rounded-full bg-accent-500" />}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
+
+      <div className="relative border-t border-white/10 p-3">
+        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+          <Avatar name={admin.name} size="sm" className="!bg-white/10 !text-white" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-white">{admin.name}</p>
+            <p className="truncate text-xs text-brand-300/70">{admin.email || 'Administrator'}</p>
+          </div>
           <button
-            className="sidebar-close"
-            aria-label="Close sidebar"
-            onClick={() => setOpen(false)}
+            type="button"
+            onClick={onLogout}
+            aria-label="Log out"
+            title="Log out"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-brand-200 transition hover:bg-white/10 hover:text-white"
           >
-            ✕
+            <PiSignOut className="size-[18px]" />
           </button>
-        )}
-
-        <div className="sidebar-top">
-          <div className="sidebar-logo">
-            <Link to="/admin/dashboard">
-              <img src={logo} alt="Logo" className="logo-img" />
-            </Link>
-          </div>
-
-          <nav className="sidebar-nav">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.label}
-                to={link.to}
-                target={link.external ? '_blank' : '_self'}
-                rel={link.external ? 'noopener noreferrer' : undefined}
-                className={({ isActive }) =>
-                  `sidebar-link ${isActive ? 'active' : ''}`
-                }
-                onClick={() => setOpen(false)}
-              >
-                <span className="sidebar-icon">{link.icon}</span>
-                <span className="sidebar-label">{link.label}</span>
-              </NavLink>
-            ))}
-          </nav>
         </div>
-
-        <div className="sidebar-bottom">
-          <div className="avatar-wrapper">
-            <div className="admin-avatar">
-              <span className="avatar-icon">👤</span>
-              <span className="status-dot"></span>
-            </div>
-          </div>
-
-          <div className="admin-info">
-            <p className="admin-name">Admin</p>
-            <a
-              href="/"
-              className="logout-link"
-              onClick={handleLogoutClick}
-            >
-              Log out
-            </a>
-          </div>
-        </div>
-      </aside>
-
-      {showLogoutConfirm && (
-        <div className="logout-modal-overlay" role="dialog" aria-modal="true">
-          <div className="logout-modal">
-            <h3 className="logout-modal-title">Confirm Logout</h3>
-            <p className="logout-modal-message">Are you sure you want to log out?</p>
-            <div className="logout-modal-actions">
-              <button
-                type="button"
-                className="btn-cancel"
-                onClick={handleCancelLogout}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn-confirm"
-                onClick={handleConfirmLogout}
-              >
-                Log Out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      </div>
+    </aside>
   );
 }

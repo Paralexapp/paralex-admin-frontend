@@ -1,142 +1,139 @@
-import React, { useState, useRef, useEffect } from 'react';
-import '../App.css';
-import { AiOutlineHome, AiOutlineDelete, AiOutlineClose, AiOutlineEdit } from 'react-icons/ai';
-import { adminGetAllAdmins, adminGetNotifications } from '../api/api';
-import { toast, ToastContainer } from 'react-toastify';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
+import { PiPlus, PiShieldCheck, PiUsersThree } from 'react-icons/pi';
+import useAsync from '../hooks/useAsync';
+import { adminCreateAdmin, adminGetAllAdmins } from '../api/api';
+import { getAdminProfile } from '../api/authHelper';
 import { getDisplayName } from '../utils/userUtils';
-import Spinner from '../components/Spinner';
+import { formatDate, toTimestamp } from '../utils/format';
+import PageHeader from '../components/ui/PageHeader';
+import DataTable from '../components/ui/DataTable';
+import Avatar from '../components/ui/Avatar';
+import Badge from '../components/ui/Badge';
+import Button from '../components/ui/Button';
+import Modal from '../components/ui/Modal';
+import { Field, Input } from '../components/ui/Form';
 
-const initialAdmins = [
-  { id: '01', name: 'Zainab Sidiku', email: 'zainab.sidiku@paralexlogistics.com', avatar: null },
-  { id: '02', name: 'Osagiede Maxwell', email: 'maxwell.o@paralexlogistics.com', avatar: null },
-];
+export default function AdminSettings() {
+  const { data, loading, error, reload } = useAsync(adminGetAllAdmins);
+  const me = getAdminProfile();
+  const [open, setOpen] = useState(false);
+  const emptyForm = { firstName: '', lastName: '', email: '', phoneNumber: '', password: '' };
+  const [form, setForm] = useState(emptyForm);
+  const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-export default function AdminPage() {
-
-  const [loading, setLoading] = useState(true);
-  // const [admins, setAdmins] = useState(initialAdmins);
-  const [admins, setAdmins] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add');
-  const [currentAdmin, setCurrentAdmin] = useState({});
-  const fileInputRef = useRef();
-
-  const fetchAdmins = async () => {
-
-    setLoading(true);
-    try {
-      const resp = await adminGetAllAdmins();
-      console.log("Admins response", resp);
-      setAdmins(resp?.reverse());
-      
-    } catch (error) {
-      console.error("Error from fetching admins", error);
-      const errorMessage = error.error || "Failed to fetch admins";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchAdmins();
-  }, []);
-
-  const openAddModal = () => {
-    setModalMode('add');
-    setCurrentAdmin({ name: '', email: '', password: '', avatar: null });
-    setIsModalOpen(true);
-  };
-  const openEditModal = admin => {
-    setModalMode('edit');
-    setCurrentAdmin({ ...admin, password: '' });
-    setIsModalOpen(true);
-  };
-  const closeModal = () => setIsModalOpen(false);
-  const handleInputChange = e => {
-    const { name, value } = e.target;
-    setCurrentAdmin(prev => ({ ...prev, [name]: value }));
-  };
-  const handleAvatarChange = e => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setCurrentAdmin(prev => ({ ...prev, avatar: reader.result }));
-      reader.readAsDataURL(file);
-    }
-  };
-  const handleSubmit = e => {
-    e.preventDefault();
-    if (modalMode === 'add') {
-      const newId = String(admins.length + 1).padStart(2, '0');
-      setAdmins(prev => [...prev, { id: newId, name: currentAdmin.name, email: currentAdmin.email, avatar: currentAdmin.avatar }]);
-    } else {
-      setAdmins(prev => prev.map(a => a.id === currentAdmin.id ? { ...a, name: currentAdmin.name, email: currentAdmin.email, avatar: currentAdmin.avatar } : a));
-    }
-    closeModal();
-  };
-  const handleRemoveAdmin = id => setAdmins(prev => prev.filter(a => a.id !== id));
-
-  return (
-    <div className="ap-container">
-      <ToastContainer position="top-right" autoClose={3000} />
-      
-      <header className="ap-header">
-        <h1 className="ap-title">Admin Page</h1>
-        <button className="ap-add-btn" onClick={openAddModal}>+ Add Admin</button>
-      </header>
-
-      <section className="ap-list">
-        {/* Shared Spinner */}
-        <Spinner loading={loading} height="200px" />
-        
-        {!loading && admins.map(admin => (
-          <div key={admin.id} className="ap-card">
-            <div className="ap-card-left">
-              <div className="ap-card-id">{(admin.id).substr(0, 4)}...</div>
-              <div className="ap-card-info">
-                <div className="ap-card-name">{getDisplayName(admin)}</div>
-                <div className="ap-card-email">{admin.email}</div>
-              </div>
-            </div>
-            <div className="ap-role-badge">
-              <AiOutlineHome size={18} /><span>Admin</span>
-            </div>
-            <div className="ap-actions">
-              <button className="ap-action-btn" onClick={() => openEditModal(admin)}>
-                <AiOutlineEdit size={18} /><span>Edit</span>
-              </button>
-              <button className="ap-action-btn" onClick={() => handleRemoveAdmin(admin.id)}>
-                <AiOutlineDelete size={18} /><span>Remove</span>
-              </button>
-            </div>
-          </div>
-        ))}
-        
-      </section>
-
-      {isModalOpen && (
-        <div className="ap-modal-overlay">
-          <div className="ap-modal">
-            <button className="ap-close-btn" onClick={closeModal}><AiOutlineClose size={20} /></button>
-            <h2 className="ap-modal-title">{modalMode === 'add' ? 'Add Admin' : 'Account Setting'}</h2>
-            <form className="ap-form" onSubmit={handleSubmit}>
-              <div className="ap-avatar-section">
-                <div className="ap-avatar-circle">
-                  {currentAdmin.avatar ? <img src={currentAdmin.avatar} alt="avatar" /> : <span>{currentAdmin.name?.charAt(0) || 'A'}</span>}
-                </div>
-                <button type="button" className="ap-upload-btn" onClick={() => fileInputRef.current.click()}>Upload Image</button>
-                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleAvatarChange} className="ap-hidden-input" />
-              </div>
-              <div className="ap-form-group"><label>Name</label><input type="text" name="name" value={currentAdmin.name} onChange={handleInputChange} required /></div>
-              <div className="ap-form-group"><label>Email</label><input type="email" name="email" value={currentAdmin.email} onChange={handleInputChange} required /></div>
-              <div className="ap-form-group"><label>Password</label><input type="password" name="password" value={currentAdmin.password} onChange={handleInputChange} /></div>
-              <button type="submit" className="ap-submit-btn">{modalMode === 'add' ? 'Add Admin' : 'Save Changes'}</button>
-            </form>
-            {modalMode === 'edit' && <button className="ap-delete-account" onClick={() => { handleRemoveAdmin(currentAdmin.id); closeModal(); }}>Delete Account</button>}
+  const columns = [
+    {
+      key: 'name',
+      header: 'Admin',
+      sortValue: (admin) => getDisplayName(admin).toLowerCase(),
+      render: (admin) => (
+        <div className="flex items-center gap-3">
+          <Avatar name={getDisplayName(admin)} src={admin.photoUrl} size="sm" />
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 truncate font-medium text-stone-900">
+              {getDisplayName(admin)}
+              {admin.email === me.email && <Badge tone="brand">You</Badge>}
+            </p>
+            <p className="truncate text-xs text-stone-500">{admin.email}</p>
           </div>
         </div>
-      )}
-    </div>
+      ),
+    },
+    { key: 'role', header: 'Role', render: () => <Badge tone="neutral"><PiShieldCheck className="size-3.5" /> Admin</Badge> },
+    { key: 'added', header: 'Added', sortValue: (admin) => toTimestamp(admin.time), render: (admin) => <span className="tabular text-stone-500">{formatDate(admin.time)}</span> },
+  ];
+
+  const close = () => {
+    setOpen(false);
+    setForm(emptyForm);
+    setFormError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const email = form.email.trim().toLowerCase();
+    if (!form.firstName.trim() || !form.lastName.trim() || !email || !form.password) {
+      setFormError('Fill in the name, email and password.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFormError('Enter a valid email address.');
+      return;
+    }
+    if (form.password.length < 8) {
+      setFormError('Use a password of at least 8 characters.');
+      return;
+    }
+    // The backend silently renames an existing admin when the email is reused, so stop that here
+    if ((Array.isArray(data) ? data : []).some((admin) => (admin.email || '').toLowerCase() === email)) {
+      setFormError('That email already belongs to an admin.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await adminCreateAdmin({ ...form, email, firstName: form.firstName.trim(), lastName: form.lastName.trim() });
+      toast.success(`${form.firstName.trim()} can now sign in as an admin.`);
+      close();
+      reload();
+    } catch (err) {
+      setFormError(typeof err.error === 'string' ? err.error : "We couldn't add this admin. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <PageHeader
+        title="Admins"
+        description="People who can sign in to this dashboard."
+        actions={<Button icon={PiPlus} onClick={() => setOpen(true)}>Add admin</Button>}
+      />
+      <DataTable
+        columns={columns}
+        rows={Array.isArray(data) ? data : []}
+        loading={loading}
+        error={error}
+        onRetry={reload}
+        searchText={(admin) => `${getDisplayName(admin)} ${admin.email || ''}`}
+        searchPlaceholder="Search admins"
+        initialSort={{ key: 'added', dir: 'asc' }}
+        empty={{ icon: PiUsersThree, title: 'No admins found' }}
+      />
+
+      <Modal
+        open={open}
+        onClose={close}
+        title="Add an admin"
+        description="They'll be able to sign in and manage everything in this dashboard."
+        footer={
+          <>
+            <Button variant="secondary" onClick={close}>Cancel</Button>
+            <Button type="submit" form="add-admin-form" loading={saving}>Add admin</Button>
+          </>
+        }
+      >
+        <form id="add-admin-form" onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
+          {formError && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 sm:col-span-2">{formError}</p>}
+          <Field label="First name" htmlFor="adminFirst">
+            <Input id="adminFirst" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+          </Field>
+          <Field label="Last name" htmlFor="adminLast">
+            <Input id="adminLast" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+          </Field>
+          <Field label="Email" htmlFor="adminEmail" className="sm:col-span-2">
+            <Input id="adminEmail" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </Field>
+          <Field label="Phone number" htmlFor="adminPhone" className="sm:col-span-2">
+            <Input id="adminPhone" type="tel" value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} />
+          </Field>
+          <Field label="Temporary password" htmlFor="adminPassword" hint="At least 8 characters. Share it with them privately." className="sm:col-span-2">
+            <Input id="adminPassword" type="password" autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          </Field>
+        </form>
+      </Modal>
+    </>
   );
 }
