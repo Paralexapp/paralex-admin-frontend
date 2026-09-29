@@ -67,7 +67,7 @@ const SignIn = () => {
         <img src={logoLight} alt="Paralex" className="relative h-9 w-auto self-start" />
 
         <div className="relative max-w-md">
-          <h1 className="text-4xl leading-tight font-semibold tracking-tight">Everything Paralex runs on, in one place.</h1>
+          <h1 className="text-4xl leading-tight font-semibold tracking-tight">Manage Paralex app in one Dashboard</h1>
           <ul className="mt-10 space-y-4">
             {highlights.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-center gap-3 text-brand-100">
