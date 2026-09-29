@@ -116,7 +116,7 @@ export default function RecordCheckPanel({ bond, onChecked }) {
               items={state.lcis}
               empty="No inmate records."
               hrefOf={(r) => `/admin/lcis/record?lcis=${encodeURIComponent(r.lcis_number)}`}
-              describe={(r) => [r.lcis_number, r.offense].filter(Boolean).join(' · ')}
+              describe={(r) => [r.lcis_number, r.Offence].filter(Boolean).join(' · ')}
             />
             <MatchList
               title="BIMS bail records"

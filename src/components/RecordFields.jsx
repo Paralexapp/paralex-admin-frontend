@@ -21,7 +21,7 @@ export default function RecordFields({ record, groups, hidden = [] }) {
           <CardHeader title={section.title} />
           <div className="p-6">
             <DetailList
-              items={section.fields.map(([key, label, wide]) => ({ label, value: present(record?.[key]) ? String(record[key]) : null, wide }))}
+              items={section.fields.map(([key, label, wide]) => ({ label, value: present(record?.[key]) ? String(record[key]).replace(/[,\s]+$/, '') : null, wide }))}
             />
           </div>
         </Card>

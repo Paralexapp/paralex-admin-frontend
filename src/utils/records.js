@@ -33,7 +33,7 @@ export const labelFor = (key) => {
 };
 
 /** Treat the API's placeholder values as blank */
-export const present = (value) => value !== null && value !== undefined && value !== "" && value !== "0";
+export const present = (value) => value !== null && value !== undefined && !["", "0", "0.00"].includes(String(value).trim());
 
 /** Photographs come back base64-encoded, with or without the data: prefix */
 export const photoSrc = (value) => {
@@ -47,6 +47,10 @@ export const personName = (record) =>
   [record?.first_name, record?.othername, record?.last_name].filter(present).join(" ") ||
   [record?.defendant_first_name, record?.defendant_last_name].filter(present).join(" ") ||
   "Unnamed";
+
+/** LCIS court: the named court when there is one, else the court type */
+export const lcisCourt = (r) =>
+  [r?.Magistrate_Court_Name_No, r?.High_Court_Name_No].find(present) || (present(r?.Trial_Court) ? r.Trial_Court : null);
 
 export const bimsTone = (status) => {
   const s = String(status || "").toLowerCase();
