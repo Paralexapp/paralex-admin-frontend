@@ -11,7 +11,6 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import { Field, Select } from '../components/ui/Form';
-import { Notice } from '../components/ui/States';
 
 // Deliveries and riders load together so the table can show rider names and the assign form
 // can offer real choices instead of typed IDs.
@@ -114,13 +113,6 @@ const DeliveryRequest = () => {
           </Button>
         }
       />
-
-      {error && (
-        <Notice tone="warning" title="The server couldn't load deliveries" className="mb-6">
-          This is a known server bug: the delivery list fails for everyone, including the mobile app. The fix is ready in the backend code but hasn't been
-          deployed to the live server yet.
-        </Notice>
-      )}
 
       <DataTable
         columns={columns}
