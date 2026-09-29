@@ -9,6 +9,8 @@ import {
   PiNewspaper,
   PiGearSix,
   PiSealCheck,
+  PiIdentificationCard,
+  PiFolderOpen,
 } from "react-icons/pi";
 import { ADMIN_VERIFYLAWYER_URL } from "../utils/constants";
 
@@ -32,6 +34,13 @@ export const navSections = [
       { to: "/admin/bailbond", label: "Bail bonds", icon: PiScales },
       { to: "/admin/logistics", label: "Deliveries", icon: PiPackage },
       { to: "/admin/transaction", label: "Transactions", icon: PiArrowsLeftRight },
+    ],
+  },
+  {
+    label: "Records",
+    items: [
+      { to: "/admin/lcis", label: "LCIS inmates", icon: PiIdentificationCard },
+      { to: "/admin/bims", label: "BIMS bail records", icon: PiFolderOpen },
     ],
   },
   {
@@ -66,6 +75,10 @@ const titles = [
   ["/admin/post-news", "Post news"],
   ["/admin/settings", "Admins"],
   ["/admin/notifications", "Notifications"],
+  ["/admin/lcis", "LCIS inmates"],
+  ["/admin/lcis/record", "Inmate record"],
+  ["/admin/bims", "BIMS bail records"],
+  ["/admin/bims/", "Bail record"],
 ];
 
 export const titleFor = (pathname) =>

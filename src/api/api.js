@@ -47,6 +47,9 @@ const handleAdminRequest = async (method, url, data = null, params = undefined) 
     }
 }
 
+/** adminRequest - shared request helper for other API modules (e.g. api/records.js) */
+export const adminRequest = (method, url, data = null, params = undefined) => handleAdminRequest(method, url, data, params);
+
 /** handleRequestError - Generic error handler for request handler functions */
 const handleRequestError = (error) => {
     // If any API error (from backend api)

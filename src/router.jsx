@@ -51,6 +51,10 @@ export const router = createBrowserRouter([
           // Old sample-document route; the detail page replaced it
           { path: "bailbonddownload", element: <Navigate to="/admin/bailbond" replace /> },
           { path: "post-news", lazy: page(() => import("./pages/PostNewsForm")) },
+          { path: "lcis", lazy: page(() => import("./pages/LcisSearch")) },
+          { path: "lcis/record", lazy: page(() => import("./pages/LcisRecord")) },
+          { path: "bims", lazy: page(() => import("./pages/BimsSearch")) },
+          { path: "bims/:id", lazy: page(() => import("./pages/BimsRecord")) },
         ],
       },
       {

@@ -7,6 +7,7 @@ import { adminApproveBailBond, adminGetBailBonds, adminRejectBailBond } from '..
 import { formatDate, formatNaira } from '../utils/format';
 import { bailBondStatus, statusTone } from '../utils/status';
 import { bailBondSections } from '../utils/bailBondSections';
+import RecordCheckPanel from '../components/RecordCheckPanel';
 import PageHeader from '../components/ui/PageHeader';
 import { Card, CardHeader } from '../components/ui/Card';
 import DetailList from '../components/ui/DetailList';
@@ -43,6 +44,8 @@ const BailBondDetail = () => {
   const [confirm, setConfirm] = useState(null); // "approve" | "reject"
   const [working, setWorking] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  // Approval is locked until the LCIS/BIMS background check has been run on this page
+  const [checked, setChecked] = useState(false);
   const back = { to: '/admin/bailbond', label: 'All bail bonds' };
 
   if (error) {
@@ -119,7 +122,7 @@ const BailBondDetail = () => {
                   <Button variant="danger-ghost" icon={PiX} onClick={() => setConfirm('reject')}>
                     Reject
                   </Button>
-                  <Button icon={PiCheck} onClick={() => setConfirm('approve')}>
+                  <Button icon={PiCheck} onClick={() => setConfirm('approve')} disabled={!checked} title={checked ? undefined : 'Run the LCIS & BIMS check first'}>
                     Approve
                   </Button>
                 </>
@@ -156,6 +159,8 @@ const BailBondDetail = () => {
               This request is <span className="font-medium">{status.toLowerCase()}</span>, so it can no longer be approved or rejected.
             </p>
           )}
+
+          {canDecide && <RecordCheckPanel bond={bond} onChecked={() => setChecked(true)} />}
 
           <div className="grid items-start gap-6 lg:grid-cols-2">
             {bailBondSections(bond).map((section) => (
