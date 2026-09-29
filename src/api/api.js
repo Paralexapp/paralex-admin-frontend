@@ -212,3 +212,8 @@ export const adminUnblockUser = async (userId) => {
 export const adminCreateDriver = async (driver) => {
     return handleAdminRequest('POST', 'service-provider/driver/profile/', driver);
 }
+
+/** Open a customer account (verified, with payment setup). Admin only. */
+export const adminCreateUser = async (user) => {
+    return handleAdminRequest('POST', 'admin/create-user', user);
+}

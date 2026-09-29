@@ -1,4 +1,5 @@
-import { PiUsers } from 'react-icons/pi';
+import { Link } from 'react-router-dom';
+import { PiPlus, PiUsers } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
 import { adminGetUsers } from '../api/api';
 import { getDisplayName } from '../utils/userUtils';
@@ -8,6 +9,7 @@ import PageHeader from '../components/ui/PageHeader';
 import DataTable from '../components/ui/DataTable';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
+import Button from '../components/ui/Button';
 
 const columns = [
   {
@@ -43,7 +45,15 @@ const Users = () => {
 
   return (
     <>
-      <PageHeader title="Users" description="Everyone who has signed up in the Paralex app." />
+      <PageHeader
+        title="Users"
+        description="Everyone who has signed up in the Paralex app."
+        actions={
+          <Button as={Link} to="/admin/add-user" icon={PiPlus}>
+            Add user
+          </Button>
+        }
+      />
       <DataTable
         columns={columns}
         rows={Array.isArray(data) ? data : []}
