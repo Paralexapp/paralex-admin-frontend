@@ -2,11 +2,10 @@ import { useSearchParams } from 'react-router-dom';
 import { PiIdentificationCard, PiMagnifyingGlass } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
 import { RECORDS_DEMO, searchLcis } from '../api/records';
-import { extractList, extractTotal, personName, bimsTone } from '../utils/records';
+import { extractList, extractTotal, lcisCourt, personName, present } from '../utils/records';
 import PageHeader from '../components/ui/PageHeader';
 import DataTable from '../components/ui/DataTable';
 import Avatar from '../components/ui/Avatar';
-import Badge from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
 import { EmptyState, SampleDataNotice } from '../components/ui/States';
 import RecordSearchForm from '../components/RecordSearchForm';
@@ -34,10 +33,10 @@ const columns = [
       </div>
     ),
   },
-  { key: 'offense', header: 'Offence', sortValue: (r) => r.offense || '', render: (r) => r.offense || '—' },
-  { key: 'court', header: 'Court', render: (r) => r.court_name || r.court || '—', mobileHidden: true },
-  { key: 'prison', header: 'Custodial centre', render: (r) => r.prison || r.location || '—', mobileHidden: true },
-  { key: 'status', header: 'Status', render: (r) => (r.status ? <Badge tone={bimsTone(r.status)} dot>{r.status}</Badge> : '—') },
+  { key: 'offense', header: 'Offence', sortValue: (r) => r.Offence || '', render: (r) => (present(r.Offence) ? r.Offence : '—') },
+  { key: 'arrested', header: 'Arrested', sortValue: (r) => r.Date_Defendant_Arrested || '', render: (r) => <span className="tabular">{present(r.Date_Defendant_Arrested) ? r.Date_Defendant_Arrested : '—'}</span>, mobileHidden: true },
+  { key: 'court', header: 'Court', render: (r) => lcisCourt(r) || '—', mobileHidden: true },
+  { key: 'prison', header: 'Custodial centre', render: (r) => (present(r.Prison_name) ? r.Prison_name : <span className="text-stone-400">Not recorded</span>) },
 ];
 
 /** Criteria live in the URL so Back from a record returns to the same results */

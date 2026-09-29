@@ -1,10 +1,21 @@
 // Made-up LCIS/BIMS records used only when the dashboard is built with VITE_RECORDS_DEMO=1,
 // so the screens can be reviewed before the real APIs are connected. No real people.
 
+// Field names follow the real LCIS response (its mixed casing included)
+const inmate = (id, lcis, first, other, last, gender, dob, state, offence, arrested, place, court, magCourt, prison, admitted, next) => ({
+  id, lcis_number: lcis, first_name: first, othername: other, last_name: last, full_name: [first, other, last].filter(Boolean).join(" "),
+  gender, date_of_birth: dob, country_of_orign: "Nigeria", state_of_origin: state, tribe: "", religion: "", address_of_defendant: "",
+  height_scale: "0.00", weight_scale: "0.00", colour_of_eyes: "Black", colour_of_hair: "Black", tribal_marks: "", Disability: "",
+  OffenceCode: "OTHERS", Offence: offence, Charge_no: "", Date_Defendant_Arrested: arrested, Location_offence_committed: place,
+  Name_of_IPO: "", Location_of_IPO: "", Police_File_Reference: "", Trial_Court: court, Magistrate_Court_Name_No: magCourt,
+  High_Court_Name_No: "", Last_adjourned_date: null, next_hearing_date: next, Prison_name: prison, inmate_category: null,
+  Date_admission: admitted, Prisoner_No: null, prison_yard: null, Photograph: null, date_stamp: `${arrested} 09:00:00`,
+});
+
 export const demoInmates = [
-  { lcis_number: "LCIS/0926/1000451", first_name: "TUNDE", othername: "", last_name: "ADEWALE", gender: "Male", phone_number: "08031110001", address: "7 Market Road, Oshodi, Lagos", offense: "Stealing", court: "Magistrate Court", court_name: "MAG CT 2 OSHODI", charge_no: "MO/S/41/26", prison: "Ikoyi Custodial Centre", status: "Awaiting Trial", date_admitted: "2026-08-14 10:22:00", photograph: null },
-  { lcis_number: "LCIS/0926/1000452", first_name: "CHIDI", othername: "EMEKA", last_name: "NWOSU", gender: "Male", phone_number: "08031110002", address: "15 Bode Thomas Street, Surulere, Lagos", offense: "Assault", court: "Magistrate Court", court_name: "MAG CT 1 YABA", charge_no: "MY/A/88/26", prison: "Medium Security Custodial Centre", status: "Released on Bail", date_admitted: "2026-07-02 09:05:00", photograph: null },
-  { lcis_number: "LCIS/0926/1000453", first_name: "FATIMA", othername: "", last_name: "BELLO", gender: "Female", phone_number: "08031110003", address: "3 Unity Close, Ikeja, Lagos", offense: "Fraud", court: "High Court", court_name: "HC 4 IKEJA", charge_no: "ID/F/12/26", prison: "Female Custodial Centre, Kirikiri", status: "Awaiting Trial", date_admitted: "2026-09-01 14:40:00", photograph: null },
+  inmate(90451, "LCIS/0926/1000451", "TUNDE", "", "ADEWALE", "Male", "1990-03-12", "Oyo", "Stealing", "2026-08-14", "Oshodi", "Magistrate Court", "MAG CT 2 OSHODI", "Ikoyi Custodial Centre", "2026-08-15", "2026-10-06"),
+  inmate(90452, "LCIS/0926/1000452", "CHIDI", "EMEKA", "NWOSU", "Male", "1987-11-02", "Anambra", "Assault", "2026-07-02", "Yaba", "Magistrate Court", "MAG CT 1 YABA", null, null, null),
+  inmate(90453, "LCIS/0926/1000453", "FATIMA", "", "BELLO", "Female", "1995-06-21", "Kwara", "Fraud", "2026-09-01", "Ikeja", "High Court", "", "Female Custodial Centre, Kirikiri", "2026-09-02", "2026-10-14"),
 ];
 
 export const demoBims = [
@@ -19,7 +30,7 @@ const matches = (record, criteria, fields) =>
     return haystack.includes(String(value).toLowerCase());
   });
 
-const lcisFields = { full_name: ["first_name", "othername", "last_name"], phone_number: ["phone_number"], lcis_number: ["lcis_number"] };
+const lcisFields = { full_name: ["first_name", "othername", "last_name"], lcis_number: ["lcis_number"], address: ["address_of_defendant"], offense: ["Offence"] };
 const bimsFields = { full_name: ["full_name"], phone_number: ["phone"], address: ["current_address"], bail_status: ["status"], offense: ["defendant_offense"] };
 
 const reply = (key, list) => new Promise((resolve) => setTimeout(() => resolve({ status: "success", data: { [key]: list, total: list.length } }), 350));
