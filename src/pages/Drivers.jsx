@@ -66,7 +66,7 @@ const Drivers = () => {
         title="Drivers"
         description="Riders registered to handle Paralex deliveries."
         actions={
-          <Button as={Link} to="/admin/add-driver" icon={PiPlus} variant="secondary">
+          <Button as={Link} to="/admin/add-driver" icon={PiPlus}>
             Add driver
           </Button>
         }

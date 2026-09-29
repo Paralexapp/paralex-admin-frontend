@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { PiEnvelopeSimple, PiPhone, PiProhibit, PiTrash } from 'react-icons/pi';
+import { PiEnvelopeSimple, PiPhone, PiProhibit, PiTrash, PiLockOpen } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
-import { adminBlockUser, adminDeleteUser, adminGetUserByUserId } from '../api/api';
+import { adminBlockUser, adminDeleteUser, adminGetUserByUserId, adminGetUsers, adminUnblockUser } from '../api/api';
 import { getDisplayName } from '../utils/userUtils';
 import { formatDate, humanize } from '../utils/format';
 import { accountStatus } from '../utils/status';
@@ -16,21 +16,28 @@ import Button from '../components/ui/Button';
 import { ErrorState, Skeleton } from '../components/ui/States';
 import { ConfirmDialog } from '../components/ui/Modal';
 
+// The single-user endpoint doesn't say whether the account is blocked; the list does.
+const loadUser = async (userId) => {
+  const [profile, list] = await Promise.all([adminGetUserByUserId(userId), adminGetUsers().catch(() => [])]);
+  const fromList = (Array.isArray(list) ? list : []).find((u) => u.id === userId);
+  return profile ? { ...profile, accountBlocked: fromList?.accountBlocked, enabled: fromList?.enabled } : profile;
+};
+
 const UserProfile = () => {
   const { userId } = useParams();
-  const { data: user, loading, error, reload } = useAsync(() => adminGetUserByUserId(userId), [userId]);
+  const { data: user, loading, error, reload } = useAsync(() => loadUser(userId), [userId]);
   const status = accountStatus(user);
   const back = { to: '/admin/users', label: 'All users' };
   const navigate = useNavigate();
-  const [confirm, setConfirm] = useState(null); // "block" | "delete"
+  const [confirm, setConfirm] = useState(null); // "block" | "unblock" | "delete"
   const [working, setWorking] = useState(false);
 
   const act = async () => {
     setWorking(true);
     try {
-      if (confirm === 'block') {
-        await adminBlockUser(userId);
-        toast.success('User blocked.');
+      if (confirm === 'block' || confirm === 'unblock') {
+        await (confirm === 'block' ? adminBlockUser(userId) : adminUnblockUser(userId));
+        toast.success(confirm === 'block' ? 'User blocked.' : 'User unblocked.');
         setConfirm(null);
         reload();
       } else {
@@ -74,7 +81,11 @@ const UserProfile = () => {
           ].filter(Boolean)}
           actions={
             <>
-              {!user?.accountBlocked && (
+              {user?.accountBlocked ? (
+                <Button variant="secondary" icon={PiLockOpen} onClick={() => setConfirm('unblock')} disabled={loading}>
+                  Unblock
+                </Button>
+              ) : (
                 <Button variant="secondary" icon={PiProhibit} onClick={() => setConfirm('block')} disabled={loading}>
                   Block
                 </Button>
@@ -117,14 +128,16 @@ const UserProfile = () => {
         onClose={() => !working && setConfirm(null)}
         onConfirm={act}
         loading={working}
-        title={confirm === 'block' ? `Block ${name}?` : `Delete ${name}?`}
+        title={confirm === 'block' ? `Block ${name}?` : confirm === 'unblock' ? `Unblock ${name}?` : `Delete ${name}?`}
         description={
           confirm === 'block'
-            ? "They won't be able to sign in to the app. There's no unblock button yet, so undoing this needs a developer."
-            : 'Their account is permanently removed. This cannot be undone.'
+            ? "They won't be able to sign in to the app until you unblock them."
+            : confirm === 'unblock'
+              ? 'They will be able to sign in to the app again.'
+              : 'Their account is permanently removed. This cannot be undone.'
         }
-        confirmLabel={confirm === 'block' ? 'Block user' : 'Delete permanently'}
-        tone="danger"
+        confirmLabel={confirm === 'block' ? 'Block user' : confirm === 'unblock' ? 'Unblock user' : 'Delete permanently'}
+        tone={confirm === 'unblock' ? 'primary' : 'danger'}
       />
     </>
   );

@@ -199,3 +199,16 @@ export const adminGetTransactionRequests = async () => {
 export const adminCreateAdmin = async (admin) => {
     return handleAdminRequest('POST', 'admin/create-admin', admin);
 }
+
+/** Unblock a user (reverses admin/block) */
+export const adminUnblockUser = async (userId) => {
+    return handleAdminRequest('POST', 'admin/unblock', null, { userId });
+}
+
+/**
+ * Onboard a rider: creates (or finds) their account from the email/phone, then their driver
+ * profile, Paystack customer and wallet. Admin only; the trailing slash is required.
+ */
+export const adminCreateDriver = async (driver) => {
+    return handleAdminRequest('POST', 'service-provider/driver/profile/', driver);
+}
