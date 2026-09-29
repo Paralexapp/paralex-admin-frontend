@@ -6,7 +6,6 @@ import { formatDate, formatNaira, humanize, toTimestamp } from '../utils/format'
 import PageHeader from '../components/ui/PageHeader';
 import DataTable from '../components/ui/DataTable';
 import Badge from '../components/ui/Badge';
-import { Notice } from '../components/ui/States';
 
 // Paystack reports amounts in kobo
 const fromKobo = (amount) => (typeof amount === 'number' ? amount / 100 : null);
@@ -110,11 +109,6 @@ const Transactions = () => {
         />
       ) : (
         <>
-          {requests.error && (
-            <Notice tone="warning" title="The server couldn't load transaction requests" className="mb-6">
-              This is the same known server bug as deliveries. The fix is ready in the backend code but hasn't been deployed to the live server yet.
-            </Notice>
-          )}
           <DataTable
             key="requests"
             columns={requestColumns}
