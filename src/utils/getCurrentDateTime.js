@@ -29,31 +29,23 @@ export const getCurrentDateTime = (date) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export const dateTimeArrayToDate = (dateTimeArray) => {
-
-  // console.log("date time", dateTimeArray);
-  let dayjsDate;
-  // If no date is passed, use todays' date
-  if (dateTimeArray.length < 3) {
-    dayjsDate = new Date();
-  } else if (dateTimeArray.length >= 3 && dateTimeArray.length < 7) {
-    dayjsDate = dayjs(new Date(
-      dateTimeArray[0],       // year
-      dateTimeArray[1] - 1,   // month (0-based)
-      dateTimeArray[2],       // day  
-    ));
-  } else {
-    dayjsDate = dayjs(new Date(
-      dateTimeArray[0],       // year
-      dateTimeArray[1] - 1,   // month (0-based)
-      dateTimeArray[2],       // day  
-      dateTimeArray[3],       // hour
-      dateTimeArray[4],       // minute
-      dateTimeArray[5],       // second
-      Math.floor(dateTimeArray[6] / 1000000)  //nanoseconds -> milliseconds
-    ));
-
+/**
+ * dateTimeArrayToDate - formats a backend date as YYYY-MM-DD.
+ * The API serialises LocalDate/LocalDateTime as arrays ([y, m, d, h, mi, s, ns]); ISO strings are
+ * accepted too. Missing or unparseable values return a placeholder instead of throwing.
+ */
+export const dateTimeArrayToDate = (dateTimeArray, fallback = "—") => {
+  if (Array.isArray(dateTimeArray)) {
+    if (dateTimeArray.length < 3) return fallback;
+    const [year, month, day, hour = 0, minute = 0, second = 0, nanos = 0] = dateTimeArray;
+    return dayjs(new Date(year, month - 1, day, hour, minute, second, Math.floor(nanos / 1000000))).format("YYYY-MM-DD");
   }
 
-  return dayjsDate.format("YYYY-MM-DD");
+  if (!dateTimeArray) return fallback;
+
+  // Some aggregation endpoints return epoch milliseconds
+  if (typeof dateTimeArray === "number") return dayjs(dateTimeArray).format("YYYY-MM-DD");
+
+  const parsed = dayjs(dateTimeArray);
+  return parsed.isValid() ? parsed.format("YYYY-MM-DD") : fallback;
 }

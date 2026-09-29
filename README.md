@@ -10,3 +10,18 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+## Deploying to Firebase Hosting
+
+1. Point the build at the API. Firebase Hosting can't relay requests to an outside server, so
+   the backend's CORS allowlist must include the dashboard's domain:
+   ```bash
+   VITE_API_BASE_URL=https://staging.api.mobile.paralexlogistics.com npm run build
+   ```
+2. Deploy (one-time setup: `npm i -g firebase-tools && firebase login && firebase use <project-id>`):
+   ```bash
+   firebase deploy --only hosting
+   ```
+`firebase.json` serves `dist/`, sends every route to `index.html` (so deep links like
+`/admin/users` work), and caches the hashed assets for a year.

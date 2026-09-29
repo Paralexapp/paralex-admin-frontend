@@ -1,128 +1,76 @@
-import React, { useState } from "react";
-import { FaPlus } from "react-icons/fa";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import "../App.css";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { listStates } from "../utils/practiceStates";
+import PageHeader from "../components/ui/PageHeader";
+import { Card, CardHeader } from "../components/ui/Card";
+import { Field, Input, Select } from "../components/ui/Form";
+import Button from "../components/ui/Button";
+import { SampleDataNotice } from "../components/ui/States";
+
+const fields = [
+  { name: "firstName", label: "First name", placeholder: "e.g. Kelechi" },
+  { name: "lastName", label: "Last name", placeholder: "e.g. Obi" },
+  { name: "email", label: "Email", type: "email", placeholder: "name@example.com" },
+  { name: "phone", label: "Phone number", type: "tel", placeholder: "0803 000 0000" },
+  { name: "address", label: "Address", placeholder: "Street, city", wide: true },
+  { name: "password", label: "Password", type: "password", placeholder: "At least 8 characters" },
+];
 
 const AddUser = () => {
-  const [formData, setFormData] = useState({});
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const navigate = useNavigate();
+  const [form, setForm] = useState({});
+  const [errors, setErrors] = useState({});
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const requiredFields = ["firstName", "lastName", "email", "phone", "state", "address", "password"];
-    const isValid = requiredFields.every((field) => formData[field]?.trim());
+    const found = {};
+    [...fields.map((f) => f.name), "state"].forEach((name) => {
+      if (!String(form[name] ?? "").trim()) found[name] = "This field is required.";
+    });
+    setErrors(found);
+    if (Object.keys(found).length) return;
+    toast.info("Nothing was saved: adding users isn't connected to the API yet.");
+  };
 
-    if (!isValid) {
-      toast.error("Please fill in all fields.");
-      return;
-    }
-
-    toast.success("User added successfully!");
-    console.log("User Data:", formData);
-    setFormData({});
+  const set = (name, value) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
   return (
-    <div className="adduser-wrapper">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
-      <h2 className="adduser-title">Add User</h2>
-
-      <div className="adduser-card">
-        <form className="adduser-form" onSubmit={handleSubmit}>
-          <div className="adduser-form-group">
-            <label>First name</label>
-            <input
-              type="text"
-              name="firstName"
-              placeholder="User first name"
-              value={formData.firstName || ""}
-              onChange={handleChange}
-            />
+    <>
+      <PageHeader title="Add user" back={{ to: "/admin/users", label: "All users" }} />
+      <SampleDataNotice>This form doesn't create accounts yet. It will once the backend endpoint is connected.</SampleDataNotice>
+      <form onSubmit={handleSubmit} noValidate className="max-w-3xl">
+        <Card>
+          <CardHeader title="User details" />
+          <div className="grid gap-5 p-6 sm:grid-cols-2">
+            {fields.map((f) => (
+              <Field key={f.name} label={f.label} htmlFor={f.name} error={errors[f.name]} required className={f.wide ? "sm:col-span-2" : ""}>
+                <Input id={f.name} type={f.type || "text"} placeholder={f.placeholder} value={form[f.name] || ""} onChange={(e) => set(f.name, e.target.value)} error={errors[f.name]} />
+              </Field>
+            ))}
+            <Field label="State" htmlFor="state" error={errors.state} required>
+              <Select id="state" value={form.state || ""} onChange={(e) => set("state", e.target.value)} error={errors.state}>
+                <option value="">Select a state</option>
+                {listStates.map((state) => (
+                  <option key={state} value={state}>
+                    {state}
+                  </option>
+                ))}
+              </Select>
+            </Field>
           </div>
-
-          <div className="adduser-form-group">
-            <label>Last name</label>
-            <input
-              type="text"
-              name="lastName"
-              placeholder="User last name"
-              value={formData.lastName || ""}
-              onChange={handleChange}
-            />
+          <div className="flex justify-end gap-2 border-t border-stone-100 px-6 py-4">
+            <Button variant="secondary" onClick={() => navigate("/admin/users")}>
+              Cancel
+            </Button>
+            <Button type="submit">Add user</Button>
           </div>
-
-          <div className="adduser-form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter user email address"
-              value={formData.email || ""}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="adduser-form-group">
-            <label>Phone number</label>
-            <input
-              type="tel"
-              name="phone"
-              placeholder="Enter user phone number"
-              value={formData.phone || ""}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="adduser-form-group">
-            <label>State of residence</label>
-            <select
-              name="state"
-              value={formData.state || ""}
-              onChange={handleChange}
-            >
-              <option value="">--Select State--</option>
-              <option value="Ogun State">Ogun State</option>
-              <option value="Edo State">Edo State</option>
-              <option value="Lagos State">Lagos State</option>
-            </select>
-          </div>
-
-          <div className="adduser-form-group">
-            <label>Residence Address</label>
-            <input
-              type="text"
-              name="address"
-              placeholder="Enter user address"
-              value={formData.address || ""}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="adduser-form-group">
-            <label>Set Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter new password"
-              value={formData.password || ""}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="adduser-btn-wrapper">
-            <button type="submit" className="adduser-btn">
-              <FaPlus className="adduser-btn-icon" />
-              Add User
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </Card>
+      </form>
+    </>
   );
 };
 

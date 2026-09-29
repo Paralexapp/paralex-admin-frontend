@@ -1,252 +1,100 @@
-// import '../App.css';
-// import { useState } from "react";
-// import { IoMdNotificationsOutline } from "react-icons/io";
-// import { FaUserCircle, FaSearch, FaBars } from "react-icons/fa";
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { PiBell, PiList, PiGearSix, PiSignOut, PiCaretDown } from 'react-icons/pi';
+import { adminGetNotifications } from '../api/api';
+import { getAdminProfile } from '../api/authHelper';
+import { titleFor } from '../layouts/navigation';
+import Avatar from './ui/Avatar';
 
-// const Header = ({ toggleSidebar }) => {
-//   const [searchTerm, setSearchTerm] = useState("");
+export default function Header({ toggleSidebar, onLogout }) {
+  const { pathname } = useLocation();
+  const admin = getAdminProfile();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+  const menuRef = useRef(null);
 
-//   const handleSearch = (e) => {
-//     setSearchTerm(e.target.value);
-//     console.log("Search:", e.target.value);
-//   };
+  // Unread badge; failures are non-fatal here (the notifications page reports them)
+  useEffect(() => {
+    adminGetNotifications()
+      .then((list) => setUnread(Array.isArray(list) ? list.filter((n) => !n.readInbox).length : 0))
+      .catch(() => setUnread(0));
+  }, []);
 
-//   return (
-//     <header className="header-container">
-//       {/* Hamburger toggle (mobile only) */}
-//       <button className="menu-toggle" onClick={toggleSidebar}>
-//         <FaBars />
-//       </button>
-
-//       <div className="header-left">
-//         <div className="header-search">
-//           <FaSearch className="search-icon" />
-//           <input
-//             type="text"
-//             placeholder="Search ..."
-//             value={searchTerm}
-//             onChange={handleSearch}
-//             className="search-input"
-//           />
-//         </div>
-//       </div>
-
-//       <div className="header-controls">
-//         <div className="header-icon header-notification">
-//           <IoMdNotificationsOutline />
-//         </div>
-//         <div className="header-icon header-profile">
-//           <FaUserCircle />
-//         </div>
-//       </div>
-//     </header>
-//   );
-// };
-
-// export default Header;
-// import '../App.css';
-// import { useState } from 'react';
-// import { IoMdNotificationsOutline } from 'react-icons/io';
-// import {
-//   FaUserCircle,
-//   FaSearch,
-//   FaBars,
-//   FaSignOutAlt,
-//   FaCog,
-// } from 'react-icons/fa';
-// import { Link } from 'react-router-dom';
-// import { logoutAdmin } from '../api/authHelper';
-
-// const Header = ({ toggleSidebar }) => {
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [showDropdown, setShowDropdown] = useState(false);
-
-//   const handleSearch = (e) => {
-//     setSearchTerm(e.target.value);
-//   };
-
-//   const toggleDropdown = () => {
-//     setShowDropdown(!showDropdown);
-//   };
-
-//   return (
-//     <header className="header-container">
-//       <button className="menu-toggle" onClick={toggleSidebar}>
-//         <FaBars />
-//       </button>
-
-//       <div className="header-left">
-//         <div className="header-search">
-//           <FaSearch className="search-icon" />
-//           <input
-//             type="text"
-//             placeholder="Search ..."
-//             value={searchTerm}
-//             onChange={handleSearch}
-//             className="search-input"
-//           />
-//         </div>
-//       </div>
-
-//       <div className="header-controls">
-//         <div className="header-icon header-notification">
-//           <Link to="notifications">
-//             <IoMdNotificationsOutline />
-//           </Link>
-//         </div>
-
-//         <div className="header-icon header-profile" onClick={toggleDropdown}>
-//           <FaUserCircle />
-//           {showDropdown && (
-//             <div className="profile-dropdown">
-//               <div className="profile-caret" />
-//               <div
-//                 className={`profile-card ${showDropdown ? 'profile-show' : ''}`}
-//               >
-//                 <div className="profile-header">
-//                   <div className="profile-avatar">
-//                     <FaUserCircle className="profile-avatar-icon" />
-//                     <span className="profile-status-dot" />
-//                   </div>
-//                   <div className="profile-info">
-//                     <div className="profile-name">Zainab S.</div>
-//                     <div className="profile-email">
-//                       zainab.sidiku@paralexlogistics.com
-//                     </div>
-//                   </div>
-//                 </div>
-//                 <hr className="profile-divider" />
-//                 <Link to="settings">
-//                   <div className="profile-item">
-//                     <FaCog className="profile-item-icon" />
-//                     <span>Account Setting</span>
-//                   </div>
-//                 </Link>
-//                 <Link to="/" onClick={() => logoutAdmin()}>
-//                   <div className="profile-item">
-//                     <FaSignOutAlt className="profile-item-icon" />
-//                     <span>Log out</span>
-//                   </div>
-//                 </Link>
-//               </div>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </header>
-//   );
-// };
-
-// export default Header;
-import React, { useState } from 'react';
-import { IoMdNotificationsOutline } from 'react-icons/io';
-import { FaUserCircle, FaSearch, FaBars, FaSignOutAlt, FaCog } from 'react-icons/fa';
-import { Link, useNavigate } from 'react-router-dom';
-import '../App.css';
-import { logoutAdmin } from '../api/authHelper';
-
-export default function Header({ toggleSidebar }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const navigate = useNavigate();
-
-  const handleSearch = (e) => setSearchTerm(e.target.value);
-  const toggleDropdown = () => setShowDropdown(!showDropdown);
-
-  const handleLogoutClick = (e) => {
-    e.preventDefault();
-    setShowLogoutConfirm(true);
-  };
-
-  const handleConfirmLogout = () => {
-    logoutAdmin();
-    setShowDropdown(false);
-    setShowLogoutConfirm(false);
-    navigate('/');
-  };
-
-  const handleCancelLogout = () => {
-    setShowLogoutConfirm(false);
-  };
+  // Close the profile menu on outside click / navigation
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onClick = (event) => !menuRef.current?.contains(event.target) && setMenuOpen(false);
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [menuOpen]);
+  useEffect(() => setMenuOpen(false), [pathname]);
 
   return (
-    <>
-      <header className="header-container">
-        <button className="menu-toggle" onClick={toggleSidebar}>
-          <FaBars />
-        </button>
+    <header className="print:hidden sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-stone-200/70 bg-white/80 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        aria-label="Open menu"
+        className="-ml-1 inline-flex size-9 items-center justify-center rounded-lg text-stone-600 hover:bg-stone-100 lg:hidden"
+      >
+        <PiList className="size-5" />
+      </button>
 
-        <div className="header-left">
-          <div className="header-search">
-            <FaSearch className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search ..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="search-input"
-            />
-          </div>
-        </div>
+      <p className="truncate text-sm font-medium text-stone-500">
+        <span className="hidden sm:inline">Paralex Admin</span>
+        <span className="mx-2 hidden text-stone-300 sm:inline">/</span>
+        <span className="text-stone-900">{titleFor(pathname)}</span>
+      </p>
 
-        <div className="header-controls">
-          <div className="header-icon header-notification">
-            <Link to="/admin/notifications">
-              <IoMdNotificationsOutline />
-            </Link>
-          </div>
+      <div className="ml-auto flex items-center gap-1.5">
+        <Link
+          to="/admin/notifications"
+          aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}
+          className="relative inline-flex size-9 items-center justify-center rounded-lg text-stone-500 transition hover:bg-stone-100 hover:text-stone-900"
+        >
+          <PiBell className="size-5" />
+          {unread > 0 && (
+            <span className="tabular absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-500 px-1 text-[10px] font-semibold text-white ring-2 ring-white">
+              {unread > 9 ? '9+' : unread}
+            </span>
+          )}
+        </Link>
 
-          <div className="header-icon header-profile" onClick={toggleDropdown}>
-            <FaUserCircle />
-            {showDropdown && (
-              <div className="profile-dropdown">
-                <div className="profile-caret" />
-                <div className="profile-card profile-show">
-                  <div className="profile-header">
-                    <div className="profile-avatar">
-                      <FaUserCircle className="profile-avatar-icon" />
-                      <span className="profile-status-dot" />
-                    </div>
-                    <div className="profile-info">
-                      <div className="profile-name">Admin</div>
-                      <div className="profile-email">info@paralexlogistics.com </div>
-                    </div>
-                  </div>
-                  <hr className="profile-divider" />
-                  <Link to="/admin/settings">
-                    <div className="profile-item">
-                      <FaCog className="profile-item-icon" />
-                      <span>Account Setting</span>
-                    </div>
-                  </Link>
-                  <a href="/" className="profile-item" onClick={handleLogoutClick}>
-                    <FaSignOutAlt className="profile-item-icon" />
-                    <span>Log out</span>
-                  </a>
-                </div>
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            className="flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 transition hover:bg-stone-100"
+          >
+            <Avatar name={admin.name} size="sm" />
+            <span className="hidden text-sm font-medium text-stone-700 sm:block">{admin.name}</span>
+            <PiCaretDown className="hidden size-3.5 text-stone-400 sm:block" />
+          </button>
+
+          {menuOpen && (
+            <div role="menu" className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl bg-white p-1.5 shadow-pop ring-1 ring-stone-200">
+              <div className="px-3 py-2.5">
+                <p className="text-sm font-medium text-stone-900">{admin.name}</p>
+                <p className="truncate text-xs text-stone-500">{admin.email || 'Administrator'}</p>
               </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {showLogoutConfirm && (
-        <div className="logout-modal-overlay" role="dialog" aria-modal="true">
-          <div className="logout-modal">
-            <h3 className="logout-modal-title">Confirm Logout</h3>
-            <p className="logout-modal-message">Are you sure you want to log out?</p>
-            <div className="logout-modal-actions">
-              <button type="button" className="btn-cancel" onClick={handleCancelLogout}>
-                Cancel
-              </button>
-              <button type="button" className="btn-confirm" onClick={handleConfirmLogout}>
-                Log Out
+              <div className="my-1 h-px bg-stone-100" />
+              <Link to="/admin/settings" role="menuitem" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-stone-700 hover:bg-stone-100">
+                <PiGearSix className="size-4 text-stone-400" /> Admin settings
+              </Link>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={onLogout}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-stone-700 hover:bg-stone-100"
+              >
+                <PiSignOut className="size-4 text-stone-400" /> Log out
               </button>
             </div>
-          </div>
+          )}
         </div>
-      )}
-    </>
+      </div>
+    </header>
   );
 }

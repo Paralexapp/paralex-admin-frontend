@@ -1,45 +1,74 @@
-// src/api/authHelpers.js
+// src/api/authHelper.js
 
-export const setWithExpiry = (key, value, expiryInMilliSeconds) => {
-    const now = new Date();
-    
-    const item ={
+const TOKEN_KEY = "adminToken";
+
+// "Remember me" keeps the session in localStorage; otherwise it lives in sessionStorage and ends
+// when the browser closes. Reads check both.
+const stores = () => [window.localStorage, window.sessionStorage];
+
+export const setWithExpiry = (key, value, expiryInMilliSeconds, storage = localStorage) => {
+    const item = {
         value,
-        expiry: now.getTime() + expiryInMilliSeconds
+        expiry: Date.now() + expiryInMilliSeconds
     };
-    // SetItem in localstorage
-    localStorage.setItem(key, JSON.stringify(item));
+    storage.setItem(key, JSON.stringify(item));
 };
 
 export const getWithExpiry = (key) => {
-    const itemStr = localStorage.getItem(key);
-    // If item doesn't exist
-    if(!itemStr) {
-        return null;
+    for (const storage of stores()) {
+        const itemStr = storage.getItem(key);
+        if (!itemStr) continue;
+
+        let item;
+        try {
+            item = JSON.parse(itemStr);
+        } catch {
+            storage.removeItem(key);
+            continue;
+        }
+
+        //If the item is expired, delete it
+        if (Date.now() > item.expiry) {
+            storage.removeItem(key);
+            continue;
+        }
+
+        return item.value;
     }
-
-    const item = JSON.parse(itemStr);
-    const now = new Date();
-
-  //Compare the expiry time of the item with the current time
-    if(now.getTime() > item.expiry){
-      //If the item is expired, delete the item from local storage
-        localStorage.removeItem(key);
-        return null;
-    }
-
-    return item.value;
+    return null;
 }
 
-export const getAdminToken = () => {
-    const adminToken = getWithExpiry("adminToken");
-    return adminToken;
+/** decodeToken - the JWT payload, or null if it can't be read */
+const decodeToken = (token) => {
+    try {
+        return JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    } catch {
+        return null;
+    }
 }
 
-export const setAdminToken = (token) => {
-    setWithExpiry("adminToken", token, 2*60*60*1000);   //Token expires in 2 hours
+/** getTokenLifetime - milliseconds until the JWT's own `exp` claim, or null if unreadable */
+const getTokenLifetime = (token) => {
+    const payload = decodeToken(token);
+    return payload?.exp ? payload.exp * 1000 - Date.now() : null;
+}
+
+export const getAdminToken = () => getWithExpiry(TOKEN_KEY);
+
+export const setAdminToken = (token, remember = true) => {
+    logoutAdmin();
+    // Follow the backend's expiry; fall back to 2 hours if the token can't be decoded.
+    setWithExpiry(TOKEN_KEY, token, getTokenLifetime(token) ?? 2*60*60*1000, remember ? localStorage : sessionStorage);
+}
+
+/** getAdminProfile - who is signed in, from the token's subject (the admin's email) */
+export const getAdminProfile = () => {
+    const token = getAdminToken();
+    const email = token ? decodeToken(token)?.sub : null;
+    const name = email ? email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "Admin";
+    return { email: email || "", name };
 }
 
 export const logoutAdmin = () => {
-    localStorage.removeItem("adminToken");
+    stores().forEach((storage) => storage.removeItem(TOKEN_KEY));
 }

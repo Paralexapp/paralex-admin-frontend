@@ -1,1 +1,62 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Brand scale built around the existing Paralex plum-brown (#400945 = 900) */
+  --color-brand-50: #fbf5fb;
+  --color-brand-100: #f4e7f4;
+  --color-brand-200: #e8cde9;
+  --color-brand-300: #d5a6d8;
+  --color-brand-400: #bb77bf;
+  --color-brand-500: #9c50a1;
+  --color-brand-600: #7f3a84;
+  --color-brand-700: #662c6b;
+  --color-brand-800: #511e56;
+  --color-brand-900: #400945;
+  --color-brand-950: #28042c;
+
+  /* Logo magenta - used sparingly for attention (unread dots, destructive emphasis) */
+  --color-accent-500: #d81b60;
+  --color-accent-600: #b8154f;
+
+  --shadow-card: 0 1px 2px rgb(64 9 69 / 0.04), 0 4px 16px -4px rgb(64 9 69 / 0.08);
+  --shadow-pop: 0 12px 40px -8px rgb(40 4 44 / 0.25);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-stone-50 text-stone-800;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes loading-bar {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
+
+/* Scrolls, but without a visible scroll bar (sidebar navigation) */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

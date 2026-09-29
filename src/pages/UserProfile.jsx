@@ -1,127 +1,132 @@
-import React, { useEffect, useState } from "react";
-import "../App.css";
-import { toast, ToastContainer } from "react-toastify";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { adminGetUserByUserId } from "../api/api";
-import Loader from "../components/Loader";
-
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { PiEnvelopeSimple, PiPhone, PiProhibit, PiTrash } from 'react-icons/pi';
+import useAsync from '../hooks/useAsync';
+import { adminBlockUser, adminDeleteUser, adminGetUserByUserId } from '../api/api';
+import { getDisplayName } from '../utils/userUtils';
+import { formatDate, humanize } from '../utils/format';
+import { accountStatus } from '../utils/status';
+import PageHeader from '../components/ui/PageHeader';
+import ProfileHero from '../components/ProfileHero';
+import { Card, CardHeader } from '../components/ui/Card';
+import DetailList from '../components/ui/DetailList';
+import Badge from '../components/ui/Badge';
+import Button from '../components/ui/Button';
+import { ErrorState, Skeleton } from '../components/ui/States';
+import { ConfirmDialog } from '../components/ui/Modal';
 
 const UserProfile = () => {
-
   const { userId } = useParams();
+  const { data: user, loading, error, reload } = useAsync(() => adminGetUserByUserId(userId), [userId]);
+  const status = accountStatus(user);
+  const back = { to: '/admin/users', label: 'All users' };
   const navigate = useNavigate();
-  const location = useLocation();
-  const [loading, setLoading] = useState(true);
+  const [confirm, setConfirm] = useState(null); // "block" | "delete"
+  const [working, setWorking] = useState(false);
 
-  const [formData, setFormData] = useState({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phoneNumber: "",
-      userType: "User"
-    });
-  
-    const [userData, setUserData] = useState(null);
-  
-    const handleChange = (e) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
-  const fetchUserByUserId = async () => {
+  const act = async () => {
+    setWorking(true);
     try {
-      
-      const resp = await adminGetUserByUserId(userId);
-      console.log("User profile - ", resp);
-      const userData = resp;
-      setUserData(userData);
-
-      setFormData({
-        firstName: userData?.firstName,
-        lastName: userData?.lastName,
-        email: userData?.email,
-        phoneNumber: userData?.phoneNumber || "Not Captured",
-        userType: userData?.userType || "User"
-      })
-
-    } catch (error) {
-      console.log("ERror ", error);
-        const errorMessage = error.error || "Something went wrong in retrieving users details";
-        toast.error(errorMessage, { toastId: "fetchUserByUserIdError"});
+      if (confirm === 'block') {
+        await adminBlockUser(userId);
+        toast.success('User blocked.');
+        setConfirm(null);
+        reload();
+      } else {
+        await adminDeleteUser(userId);
+        toast.success('User deleted.');
+        navigate('/admin/users', { replace: true });
+      }
+    } catch (err) {
+      toast.error(typeof err.error === 'string' ? err.error : `We couldn't ${confirm} this user. Please try again.`);
     } finally {
-      setLoading(false);
+      setWorking(false);
     }
+  };
+
+  if (error) {
+    return (
+      <>
+        <PageHeader title="User profile" back={back} />
+        <Card>
+          <ErrorState message={error} onRetry={reload} />
+        </Card>
+      </>
+    );
   }
 
-  useEffect(() => {
-    fetchUserByUserId()
-  }, [])
+  const name = getDisplayName(user);
 
   return (
-    <div className="user-profile-wrapper">
+    <>
+      <PageHeader title="User profile" back={back} />
+      <div className="space-y-6">
+        <ProfileHero
+          loading={loading}
+          name={name}
+          src={user?.photoUrl}
+          subtitle={humanize(user?.userType)}
+          badges={<Badge tone={status.tone} dot>{status.label}</Badge>}
+          meta={[
+            user?.email && { icon: PiEnvelopeSimple, text: user.email },
+            user?.phoneNumber && { icon: PiPhone, text: user.phoneNumber },
+          ].filter(Boolean)}
+          actions={
+            <>
+              {!user?.accountBlocked && (
+                <Button variant="secondary" icon={PiProhibit} onClick={() => setConfirm('block')} disabled={loading}>
+                  Block
+                </Button>
+              )}
+              <Button variant="danger-ghost" icon={PiTrash} onClick={() => setConfirm('delete')} disabled={loading}>
+                Delete
+              </Button>
+            </>
+          }
+        />
 
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-
-      <div className="user-profile-container">
-        {/* Left Section - Avatar */}
-        <div className="user-profile-avatar-section">
-          <div className="user-avatar">{userData?.firstName?.charAt(0)}</div>
-          <h2 className="userp-name">{userData?.firstName} </h2>
-          <span className="user-role"> {userData?.userType} </span>
-        </div>
-
-        {/* Right Section - Form */}
-        <div className="user-profile-form-section">
-          <h2 className="form-title">User Profile Setting</h2>
-
-
-          {/* Loading state - show loader */}
-          {loading ? <Loader /> : null}
-
-          <form className="user-form">
-            <div className="form-group">
-              <label>First name</label>
-              <input id="firstName" name="firstName" type="text" value={formData.firstName} readonly />
-            </div>
-
-            <div className="form-group">
-              <label>Last name</label>
-              <input id="lastName" name="lastName" type="text" value={formData.lastName} readOnly />
-            </div>
-
-            <div className="form-group">
-              <label>Email</label>
-              <input id="email" name="email" type="email" value={formData.email} readOnly />
-            </div>
-
-            <div className="form-group">
-              <label>Phone number</label>
-              <input id="phoneNumber" name="phoneNumber" type="text" value={formData.phoneNumber} readOnly />
-            </div>
-
-            {/* <div className="form-group">
-              <label>State of residence</label>
-              <select defaultValue="Ogun state">
-                <option>Ogun state</option>
-                <option>Lagos</option>
-                <option>Abuja</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Reset Password</label>
-              <input type="password" placeholder="Enter new password" />
-            </div> */}
-          </form>
-
-          <div className="form-buttons">
-            <button className="update-btn">Update Profile</button>
-            <button className="btn purple">Block User</button>
-            <button className="delete-btn">Delete Profile</button>
+        <Card>
+          <CardHeader title="Details" />
+          <div className="p-6">
+            {loading ? (
+              <div className="grid gap-5 sm:grid-cols-2">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <Skeleton key={i} className="h-9" />
+                ))}
+              </div>
+            ) : (
+              <DetailList
+                items={[
+                  { label: 'First name', value: user?.firstName },
+                  { label: 'Last name', value: user?.lastName },
+                  { label: 'Email', value: user?.email },
+                  { label: 'Phone number', value: user?.phoneNumber },
+                  { label: 'Account type', value: humanize(user?.userType) },
+                  { label: 'Date of birth', value: user?.dateOfBirth ? formatDate(user.dateOfBirth) : null },
+                  { label: 'About', value: user?.aboutMe, wide: true },
+                ]}
+              />
+            )}
           </div>
-        </div>
+        </Card>
       </div>
-    </div>
+
+      <ConfirmDialog
+        open={Boolean(confirm)}
+        onClose={() => !working && setConfirm(null)}
+        onConfirm={act}
+        loading={working}
+        title={confirm === 'block' ? `Block ${name}?` : `Delete ${name}?`}
+        description={
+          confirm === 'block'
+            ? "They won't be able to sign in to the app. There's no unblock button yet, so undoing this needs a developer."
+            : 'Their account is permanently removed. This cannot be undone.'
+        }
+        confirmLabel={confirm === 'block' ? 'Block user' : 'Delete permanently'}
+        tone="danger"
+      />
+    </>
   );
 };
 

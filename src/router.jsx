@@ -1,131 +1,66 @@
-import { createBrowserRouter, Outlet } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import RootLayout from "./layouts/RootLayout";
 import AdminProtectedRoute from "./layouts/AdminProtectedRoute";
 import SignIn from "./auth/SiginIn";
-import DashboardLayout from "./layouts/DashboardLayout";
-import Dashboard from './pages/Dashboard';
-import Lawyers from './pages/Lawyers';      
-import Bailbond from './pages/Bailbond';
-import Users from './pages/Users';
-import Drivers from './pages/Drivers';
-import LawyerProfile from './pages/LawyerProfile';
-import UserProfile from './pages/UserProfile';
-import AddLawyer from './pages/AddLawyer';
-import AddUser from './pages/AddUser';
-import DriverProfile from './pages/DriverProfile';
-import AddDriver from './pages/AddDriver';
 import ErrorPage from "./pages/ErrorPage";
-import NotificationPage from "./pages/Notifications";
-import DeliveryRequest from "./pages/DeliveryRequest";
-import Transactions from "./pages/Transactions";
-import BailBondDownload from "./pages/BailBondDownload";
-import PostNewsForm from "./pages/PostNewsForm";
-import AdminSettings from "./pages/AdminSettings";
+import DashboardLayout from "./layouts/DashboardLayout";
+
+// Pages load on demand so the sign-in screen doesn't ship the charts, PDF tooling, etc.
+const page = (load) => async () => ({ Component: (await load()).default });
 
 export const router = createBrowserRouter([
-  // Route definition
   {
-    path: "/", //Admin Login route
-    element: <SignIn />,
-  },
-  {
-    path: "/admin/login",
-    element: <SignIn />,
-  },
-//   {
-//     path: "/admin/forgot-password",
-//     element: <AdminForgotPassword />
-//   },
-//   {
-//     path: "/admin/reset-password",
-//     element: <AdminResetPassword />
-//   },
-  {
-    path: "/admin", //Every Admin related route is prefixed with '/admin'
-    element: (
-      <AdminProtectedRoute>
-        <DashboardLayout />
-        </AdminProtectedRoute>
-    ),
+    // Root layout hosts the app-wide toast container
+    element: <RootLayout />,
+    // First paint while the initial page chunk loads
+    hydrateFallbackElement: <div className="min-h-dvh bg-stone-50" />,
     children: [
       {
-        path: "",
-        element: <Dashboard />,
+        path: "/", //Admin Login route
+        element: <SignIn />,
       },
       {
-        path: "dashboard",
-        element: <Dashboard />,
+        path: "/admin/login",
+        element: <SignIn />,
       },
       {
-        path: "settings",
-        // element: <AdminSettings />,
-        element: <AdminSettings/>,
+        path: "/admin", //Every Admin related route is prefixed with '/admin'
+        element: (
+          <AdminProtectedRoute>
+            <DashboardLayout />
+          </AdminProtectedRoute>
+        ),
+        children: [
+          { index: true, lazy: page(() => import("./pages/Dashboard")) },
+          { path: "dashboard", lazy: page(() => import("./pages/Dashboard")) },
+          { path: "settings", lazy: page(() => import("./pages/AdminSettings")) },
+          { path: "bailbond", lazy: page(() => import("./pages/Bailbond")) },
+          { path: "lawyers", lazy: page(() => import("./pages/Lawyers")) },
+          { path: "add-lawyer", lazy: page(() => import("./pages/AddLawyer")) },
+          { path: "lawyer/:userId", lazy: page(() => import("./pages/LawyerProfile")) },
+          { path: "users", lazy: page(() => import("./pages/Users")) },
+          { path: "add-user", lazy: page(() => import("./pages/AddUser")) },
+          { path: "user/:userId", lazy: page(() => import("./pages/UserProfile")) },
+          { path: "drivers", lazy: page(() => import("./pages/Drivers")) },
+          { path: "add-driver", lazy: page(() => import("./pages/AddDriver")) },
+          { path: "driver/:driverId", lazy: page(() => import("./pages/DriverProfile")) },
+          { path: "notifications", lazy: page(() => import("./pages/Notifications")) },
+          { path: "logistics", lazy: page(() => import("./pages/DeliveryRequest")) },
+          { path: "transaction", lazy: page(() => import("./pages/Transactions")) },
+          { path: "bailbond/:id", lazy: page(() => import("./pages/BailBondDetail")) },
+          // Old sample-document route; the detail page replaced it
+          { path: "bailbonddownload", element: <Navigate to="/admin/bailbond" replace /> },
+          { path: "post-news", lazy: page(() => import("./pages/PostNewsForm")) },
+          { path: "lcis", lazy: page(() => import("./pages/LcisSearch")) },
+          { path: "lcis/record", lazy: page(() => import("./pages/LcisRecord")) },
+          { path: "bims", lazy: page(() => import("./pages/BimsSearch")) },
+          { path: "bims/:id", lazy: page(() => import("./pages/BimsRecord")) },
+        ],
       },
       {
-        path: "bailbond",
-        element: <Bailbond />,
+        path: "*",
+        element: <ErrorPage />
       },
-      {
-        path: "lawyers",
-        element: <Lawyers />,
-      },
-      {
-        path: "add-lawyer",
-        element: <AddLawyer />,
-      },
-      {
-        path: "lawyer/:userId", // Lawyer details page
-        element: <LawyerProfile />,
-      },
-      {
-        path: "users",
-        element: <Users />,
-      },
-      {
-        path: "add-user",
-        element: <AddUser />,
-      },
-      {
-        path: "user/:userId", // User details page
-        element: <UserProfile />,
-      },
-      {
-        path: "drivers",
-        element: <Drivers />,
-      },
-      {
-        path: "add-driver",
-        element: <AddDriver />,
-      },
-      {
-        path: "driver/:driverId", // Lawyer details page
-        element: <DriverProfile />,
-      },
-      {
-        path: "notifications",
-        element: <NotificationPage />,
-      },
-      {
-        path: "logistics",
-        element: <DeliveryRequest />,
-      },
-      {
-        path: "transaction",
-        element: <Transactions />,
-      },
-      {
-        path: "bailbonddownload",
-        element: <BailBondDownload />
-      },
-      {
-        path: "post-news",
-        element: <PostNewsForm />
-      }
-    
     ],
   },
-  {
-    path: "*",
-    element: <ErrorPage />
-  }
-
 ]);
