@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { PiEnvelopeSimple, PiPhone, PiProhibit, PiTrash, PiLockOpen } from 'react-icons/pi';
+import { PiEnvelopeSimple, PiPhone, PiProhibit, PiTrash, PiLockOpen, PiPencilSimple } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
 import { adminBlockUser, adminDeleteUser, adminGetUserByUserId, adminGetUsers, adminUnblockUser } from '../api/api';
 import { getDisplayName } from '../utils/userUtils';
@@ -15,6 +15,7 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import { ErrorState, Skeleton } from '../components/ui/States';
 import { ConfirmDialog } from '../components/ui/Modal';
+import EditUserModal from '../components/EditUserModal';
 
 // The single-user endpoint doesn't say whether the account is blocked; the list does.
 const loadUser = async (userId) => {
@@ -31,6 +32,7 @@ const UserProfile = () => {
   const navigate = useNavigate();
   const [confirm, setConfirm] = useState(null); // "block" | "unblock" | "delete"
   const [working, setWorking] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const act = async () => {
     setWorking(true);
@@ -81,6 +83,9 @@ const UserProfile = () => {
           ].filter(Boolean)}
           actions={
             <>
+              <Button variant="secondary" icon={PiPencilSimple} onClick={() => setEditing(true)} disabled={loading}>
+                Edit details
+              </Button>
               {user?.accountBlocked ? (
                 <Button variant="secondary" icon={PiLockOpen} onClick={() => setConfirm('unblock')} disabled={loading}>
                   Unblock
@@ -122,6 +127,8 @@ const UserProfile = () => {
           </div>
         </Card>
       </div>
+
+      <EditUserModal open={editing} onClose={() => setEditing(false)} user={user ? { ...user, id: userId } : null} onSaved={reload} />
 
       <ConfirmDialog
         open={Boolean(confirm)}

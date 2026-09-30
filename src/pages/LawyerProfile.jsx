@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { PiEnvelopeSimple, PiPhone, PiMapPin, PiStar } from 'react-icons/pi';
+import { PiEnvelopeSimple, PiPhone, PiMapPin, PiStar, PiPencilSimple } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
 import { adminGetLawyerByUserId } from '../api/api';
 import { getDisplayName } from '../utils/userUtils';
@@ -10,10 +11,13 @@ import { Card, CardHeader } from '../components/ui/Card';
 import DetailList from '../components/ui/DetailList';
 import Badge from '../components/ui/Badge';
 import { ErrorState, Skeleton } from '../components/ui/States';
+import Button from '../components/ui/Button';
+import EditLawyerModal from '../components/EditLawyerModal';
 
 const LawyerProfile = () => {
   const { userId } = useParams();
   const { data, loading, error, reload } = useAsync(() => adminGetLawyerByUserId(userId), [userId]);
+  const [editing, setEditing] = useState(false);
   const lawyer = data?.data;
   const back = { to: '/admin/lawyers', label: 'All lawyers' };
 
@@ -48,6 +52,13 @@ const LawyerProfile = () => {
             lawyer?.state && { icon: PiMapPin, text: lawyer.state },
             lawyer?.totalReviews > 0 && { icon: PiStar, text: `${Number(lawyer.averageRating).toFixed(1)} from ${lawyer.totalReviews} reviews` },
           ].filter(Boolean)}
+          actions={
+            !loading && (
+              <Button variant="secondary" icon={PiPencilSimple} onClick={() => setEditing(true)}>
+                Edit profile
+              </Button>
+            )
+          }
         />
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -96,6 +107,7 @@ const LawyerProfile = () => {
           </Card>
         </div>
       </div>
+      <EditLawyerModal open={editing} onClose={() => setEditing(false)} lawyer={lawyer} userId={userId} onSaved={reload} />
     </>
   );
 };

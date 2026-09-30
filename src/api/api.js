@@ -217,3 +217,13 @@ export const adminCreateDriver = async (driver) => {
 export const adminCreateUser = async (user) => {
     return handleAdminRequest('POST', 'admin/create-user', user);
 }
+
+/** Edit a user's details; only the fields sent change (email is not editable) */
+export const adminEditUser = async (userId, fields) => {
+    return handleAdminRequest('PATCH', `admin/users/${encodeURIComponent(userId)}`, fields);
+}
+
+/** Edit a lawyer's account and profile fields; only the fields sent change */
+export const adminEditLawyer = async (userId, fields) => {
+    return handleAdminRequest('PATCH', `admin/lawyers/${encodeURIComponent(userId)}`, fields);
+}
