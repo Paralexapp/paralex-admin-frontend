@@ -227,3 +227,16 @@ export const adminEditUser = async (userId, fields) => {
 export const adminEditLawyer = async (userId, fields) => {
     return handleAdminRequest('PATCH', `admin/lawyers/${encodeURIComponent(userId)}`, fields);
 }
+
+/** Hide a lawyer from the app (and show them again) without deleting anything */
+export const adminDisableLawyer = async (userId) => {
+    return handleAdminRequest('PUT', 'admin/disable-lawyer', null, { userId });
+}
+export const adminEnableLawyer = async (userId) => {
+    return handleAdminRequest('PUT', 'admin/enable-lawyer', null, { userId });
+}
+
+/** Every successful payment (deliveries, bail bonds, litigation support), newest first */
+export const adminGetPaymentLedger = async () => {
+    return handleAdminRequest('GET', 'admin/payments');
+}

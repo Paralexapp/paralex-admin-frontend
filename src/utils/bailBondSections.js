@@ -1,4 +1,5 @@
 import { formatDate, formatNaira } from "./format";
+import { bailBondCharges } from "./bailBondCharges";
 
 /**
  * Everything a bail bond application contains, grouped into sections. Shared by the detail page
@@ -79,7 +80,7 @@ export const bailBondSections = (bond) =>
         { label: "Investigating agency", value: bond.investigatingAgency },
         { label: "Detention facility", value: bond.detentionFacilityLocation },
         { label: "Charges", value: bond.charges, wide: true },
-        { label: "Charge amount", value: bond.chargeAmount ? formatNaira(bond.chargeAmount) : null },
+        { label: "Bail amount", value: bond.chargeAmount || bond.totalAmount ? formatNaira(bailBondCharges(bond).bail) : null },
         { label: "Date of last arrest", value: date(bond.dateOfLastArrest) },
         { label: "Last arresting agency", value: bond.lastArrestingAgency },
         { label: "Last arrest charges", value: bond.lastArrestCharges },

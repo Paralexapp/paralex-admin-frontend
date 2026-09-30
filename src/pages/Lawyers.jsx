@@ -9,6 +9,7 @@ import DataTable from '../components/ui/DataTable';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
+import { lawyerStatus } from '../utils/status';
 
 const lawyerName = (lawyer) => (lawyer?.user ? getDisplayName(lawyer.user) : lawyer?.lawyerName || 'Unnamed lawyer');
 
@@ -44,6 +45,15 @@ const columns = [
       );
     },
   },
+  {
+    key: 'status',
+    header: 'Status',
+    sortValue: (lawyer) => lawyerStatus(lawyer).label,
+    render: (lawyer) => {
+      const status = lawyerStatus(lawyer);
+      return <Badge tone={status.tone} dot>{status.label}</Badge>;
+    },
+  },
   { key: 'joined', header: 'Joined', sortValue: (lawyer) => toTimestamp(lawyer.time), render: (lawyer) => <span className="tabular text-stone-500">{formatDate(lawyer.time)}</span> },
 ];
 
@@ -66,6 +76,12 @@ const Lawyers = () => {
         onRetry={reload}
         searchText={(lawyer) => `${lawyerName(lawyer)} ${lawyer.user?.email || ''} ${lawyer.supremeCourtNumber || ''} ${lawyer.state || ''}`}
         searchPlaceholder="Search by name, email, SCN or state"
+        filters={[
+          { label: 'All', value: 'all' },
+          { label: 'Active', value: 'active', predicate: (lawyer) => lawyerStatus(lawyer).label === 'Active' },
+          { label: 'Disabled', value: 'disabled', predicate: (lawyer) => lawyerStatus(lawyer).label === 'Disabled' },
+          { label: 'Blocked', value: 'blocked', predicate: (lawyer) => lawyerStatus(lawyer).label === 'Blocked' },
+        ]}
         initialSort={{ key: 'joined', dir: 'desc' }}
         rowHref={(lawyer) => `/admin/lawyer/${lawyer.user?.id || lawyer.userId}`}
         empty={{ icon: PiGavel, title: 'No lawyers yet', description: 'Add a lawyer, or wait for lawyers to register in the app.', action: addButton }}

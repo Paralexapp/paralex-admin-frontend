@@ -3,6 +3,7 @@ import logoUrl from "../assets/favicon.png";
 import { bailBondSections, CONSENT, DECLARATION } from "./bailBondSections";
 import { formatDate, formatNaira } from "./format";
 import { bailBondStatus } from "./status";
+import { bailBondCharges } from "./bailBondCharges";
 
 // A4 portrait, millimetres
 const PAGE_W = 210;
@@ -114,9 +115,10 @@ export async function downloadBailBondPdf(bond) {
   y += 7;
 
   // ---- Summary boxes
+  const charges = bailBondCharges(bond);
   const boxes = [
-    ["Bond amount", money(bond.totalAmount)],
-    ["Service fee", money(bond.feeCharged)],
+    ["Bail amount", money(charges.bail)],
+    ["Total to pay (fee + VAT)", money(charges.total)],
     ["Payment", bond.paid ? "Paid" : "Not paid"],
     ["Arresting agency", safe(bond.arrestingAgency || "—")],
   ];
@@ -138,11 +140,16 @@ export async function downloadBailBondPdf(bond) {
     })();
     doc.text(lines, x + 3.5, lines.length === 1 ? y + 12.5 : y + 10.5);
   });
-  y += 25;
+  y += 21;
+
+  // ---- How the total is made up
+  font(8, "normal", C.muted);
+  doc.text(`Paralex fee (10% of bail) ${money(charges.fee)} + VAT (7.5% of fee) ${money(charges.vat)} = ${money(charges.total)}. The bail amount itself is not paid to Paralex.`, MARGIN, y, { maxWidth: CONTENT_W });
+  y += 8;
 
   // ---- Declaration
   font(8.5, "normal", C.muted);
-  const declaration = doc.splitTextToSize(`${DECLARATION} ${money(bond.totalAmount)}.`, CONTENT_W);
+  const declaration = doc.splitTextToSize(`${DECLARATION} ${money(charges.bail)}.`, CONTENT_W);
   doc.text(declaration, MARGIN, y);
   y += declaration.length * 3.9 + 6;
 

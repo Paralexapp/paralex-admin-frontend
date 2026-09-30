@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { PiEnvelopeSimple, PiPhone, PiStar, PiSteeringWheel, PiPower, PiProhibit } from 'react-icons/pi';
+import { PiEnvelopeSimple, PiPhone, PiStar, PiSteeringWheel, PiPower, PiProhibit, PiLockOpen, PiLock } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
-import { adminDisableRider, adminEnableRider, adminGetDrivers } from '../api/api';
+import { adminBlockUser, adminDisableRider, adminEnableRider, adminGetDrivers, adminUnblockUser } from '../api/api';
 import { formatDate } from '../utils/format';
 import { driverName, driverStatus, driverUserId, masked } from '../utils/drivers';
 import PageHeader from '../components/ui/PageHeader';
@@ -26,7 +26,7 @@ const yesNo = (value) => (value ? 'Yes' : 'No');
 const DriverProfile = () => {
   const { driverId } = useParams();
   const { data: driver, loading, error, reload } = useAsync(() => loadDriver(driverId), [driverId]);
-  const [confirm, setConfirm] = useState(false);
+  const [confirm, setConfirm] = useState(null);
   const [working, setWorking] = useState(false);
   const back = { to: '/admin/drivers', label: 'All drivers' };
 
@@ -56,13 +56,52 @@ const DriverProfile = () => {
   const status = driverStatus(driver);
   const enabled = Boolean(driver?.status);
 
-  const toggle = async () => {
+  const blocked = Boolean(driver?.user?.accountBlocked);
+  const riderId = driverUserId(driver);
+
+  // Each action shares one confirm dialog
+  const actions = {
+    disable: {
+      title: `Disable ${name}?`,
+      description: "They won't be matched to new deliveries or show up as a nearby rider. Their history is kept.",
+      confirmLabel: 'Disable driver',
+      tone: 'danger',
+      run: () => adminDisableRider(riderId),
+      done: `${name} was disabled.`,
+    },
+    enable: {
+      title: `Enable ${name}?`,
+      description: 'They will be able to take deliveries and appear as a nearby rider.',
+      confirmLabel: 'Enable driver',
+      tone: 'primary',
+      run: () => adminEnableRider(riderId),
+      done: `${name} was enabled.`,
+    },
+    block: {
+      title: `Block ${name}?`,
+      description: "They can't sign in to the app, so they can't take deliveries. You can unblock them later.",
+      confirmLabel: 'Block driver',
+      tone: 'danger',
+      run: () => adminBlockUser(riderId),
+      done: `${name} was blocked.`,
+    },
+    unblock: {
+      title: `Unblock ${name}?`,
+      description: 'They can sign in again. If they are also disabled, enable them before they can take jobs.',
+      confirmLabel: 'Unblock driver',
+      tone: 'primary',
+      run: () => adminUnblockUser(riderId),
+      done: `${name} was unblocked.`,
+    },
+  };
+  const pending = confirm && actions[confirm];
+
+  const runAction = async () => {
     setWorking(true);
     try {
-      if (enabled) await adminDisableRider(driverUserId(driver));
-      else await adminEnableRider(driverUserId(driver));
-      toast.success(enabled ? `${name} was disabled.` : `${name} was enabled.`);
-      setConfirm(false);
+      await pending.run();
+      toast.success(pending.done);
+      setConfirm(null);
       reload();
     } catch (err) {
       toast.error(err.error || "We couldn't update this driver. Please try again.");
@@ -80,7 +119,12 @@ const DriverProfile = () => {
           name={name}
           src={driver?.passportUrl || driver?.user?.photoUrl}
           subtitle="Driver"
-          badges={<Badge tone={status.tone} dot>{status.label}</Badge>}
+          badges={
+            <>
+              <Badge tone={status.tone} dot>{status.label}</Badge>
+              {blocked && <Badge tone="danger" dot>Blocked</Badge>}
+            </>
+          }
           meta={[
             driver?.user?.email && { icon: PiEnvelopeSimple, text: driver.user.email },
             driver?.user?.phoneNumber && { icon: PiPhone, text: driver.user.phoneNumber },
@@ -88,9 +132,14 @@ const DriverProfile = () => {
           ].filter(Boolean)}
           actions={
             !loading && (
-              <Button variant={enabled ? 'danger-ghost' : 'primary'} icon={enabled ? PiProhibit : PiPower} onClick={() => setConfirm(true)}>
-                {enabled ? 'Disable driver' : 'Enable driver'}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant={enabled ? 'danger-ghost' : 'primary'} icon={enabled ? PiProhibit : PiPower} onClick={() => setConfirm(enabled ? 'disable' : 'enable')}>
+                  {enabled ? 'Disable driver' : 'Enable driver'}
+                </Button>
+                <Button variant="secondary" icon={blocked ? PiLockOpen : PiLock} onClick={() => setConfirm(blocked ? 'unblock' : 'block')}>
+                  {blocked ? 'Unblock' : 'Block'}
+                </Button>
+              </div>
             )
           }
         />
@@ -147,18 +196,14 @@ const DriverProfile = () => {
       </div>
 
       <ConfirmDialog
-        open={confirm}
-        onClose={() => !working && setConfirm(false)}
-        onConfirm={toggle}
+        open={Boolean(pending)}
+        onClose={() => !working && setConfirm(null)}
+        onConfirm={runAction}
         loading={working}
-        title={enabled ? `Disable ${name}?` : `Enable ${name}?`}
-        description={
-          enabled
-            ? "They won't be matched to new deliveries or show up as a nearby rider. Their history is kept."
-            : 'They will be able to take deliveries and appear as a nearby rider.'
-        }
-        confirmLabel={enabled ? 'Disable driver' : 'Enable driver'}
-        tone={enabled ? 'danger' : 'primary'}
+        title={pending?.title}
+        description={pending?.description}
+        confirmLabel={pending?.confirmLabel}
+        tone={pending?.tone}
       />
     </>
   );
