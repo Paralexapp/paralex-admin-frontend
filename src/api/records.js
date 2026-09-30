@@ -25,3 +25,11 @@ export const searchBims = (criteria) =>
 /** One BIMS bail record by its record id */
 export const getBimsRecord = (id) =>
   RECORDS_DEMO ? demoApi.getBims(id) : adminRequest("GET", `admin/records/bims/${encodeURIComponent(id)}`);
+
+/** Server-run background check on a bail bond application: searches LCIS/BIMS and saves an audit record */
+export const runRecordCheck = (bailBondId) =>
+  adminRequest("POST", `admin/bail-bonds/${encodeURIComponent(bailBondId)}/record-checks`);
+
+/** Past background checks on an application, newest first */
+export const getRecordChecks = (bailBondId) =>
+  adminRequest("GET", `admin/bail-bonds/${encodeURIComponent(bailBondId)}/record-checks`);
