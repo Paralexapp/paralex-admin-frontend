@@ -7,6 +7,7 @@ import { getAdminProfile } from "../api/authHelper";
 import { getDisplayName } from "../utils/userUtils";
 import { formatDate, formatNaira, humanize, toTimestamp } from "../utils/format";
 import { bailBondStatus, statusTone } from "../utils/status";
+import { bailBondCharges } from "../utils/bailBondCharges";
 import PageHeader from "../components/ui/PageHeader";
 import StatCard from "../components/ui/StatCard";
 import { Card, CardHeader } from "../components/ui/Card";
@@ -249,7 +250,7 @@ const Dashboard = () => {
                     <Avatar name={bond.fullName || "Unknown"} size="sm" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-stone-900">{bond.fullName || "Unnamed submitter"}</p>
-                      <p className="tabular text-xs text-stone-500">{formatNaira(bond.totalAmount)}</p>
+                      <p className="tabular text-xs text-stone-500">Bail {formatNaira(bailBondCharges(bond).bail)} · pays {formatNaira(bailBondCharges(bond).total)}</p>
                     </div>
                     <Badge tone={statusTone[status]} dot>
                       {status}

@@ -3,6 +3,7 @@ import useAsync from '../hooks/useAsync';
 import { adminGetBailBonds } from '../api/api';
 import { formatDate, formatNaira, toTimestamp } from '../utils/format';
 import { bailBondStatus, statusTone } from '../utils/status';
+import { bailBondCharges } from '../utils/bailBondCharges';
 import PageHeader from '../components/ui/PageHeader';
 import DataTable from '../components/ui/DataTable';
 import Badge from '../components/ui/Badge';
@@ -21,7 +22,21 @@ const columns = [
   },
   { key: 'arrested', header: 'Arrest date', sortValue: (bond) => toTimestamp(bond.dateOfCurrentArrest), render: (bond) => <span className="tabular">{formatDate(bond.dateOfCurrentArrest)}</span> },
   { key: 'agency', header: 'Arresting agency', render: (bond) => bond.arrestingAgency || '—', mobileHidden: true },
-  { key: 'amount', header: 'Amount', sortValue: (bond) => Number(bond.totalAmount) || 0, className: 'text-right', render: (bond) => <span className="tabular font-medium text-stone-900">{formatNaira(bond.totalAmount)}</span> },
+  {
+    key: 'amount',
+    header: 'To pay',
+    sortValue: (bond) => bailBondCharges(bond).total,
+    className: 'text-right',
+    render: (bond) => {
+      const charges = bailBondCharges(bond);
+      return (
+        <div>
+          <p className="tabular font-medium text-stone-900">{formatNaira(charges.total)}</p>
+          <p className="tabular text-xs text-stone-500">Bail {formatNaira(charges.bail)}</p>
+        </div>
+      );
+    },
+  },
   { key: 'paid', header: 'Payment', render: (bond) => (bond.paid ? <Badge tone="success">Paid</Badge> : <Badge>Unpaid</Badge>), mobileHidden: true },
   {
     key: 'status',

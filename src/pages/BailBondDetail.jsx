@@ -7,6 +7,7 @@ import { adminApproveBailBond, adminGetBailBonds, adminRejectBailBond } from '..
 import { formatDate, formatNaira } from '../utils/format';
 import { bailBondStatus, statusTone } from '../utils/status';
 import { bailBondSections } from '../utils/bailBondSections';
+import { bailBondCharges } from '../utils/bailBondCharges';
 import RecordCheckPanel from '../components/RecordCheckPanel';
 import PageHeader from '../components/ui/PageHeader';
 import { Card, CardHeader } from '../components/ui/Card';
@@ -71,6 +72,7 @@ const BailBondDetail = () => {
   }
 
   const status = bond ? bailBondStatus(bond) : null;
+  const charges = bailBondCharges(bond);
   const canDecide = status === 'Pending';
 
   const download = async () => {
@@ -140,11 +142,13 @@ const BailBondDetail = () => {
       ) : (
         <div className="space-y-6">
           {/* Summary strip */}
-          <Card className="grid gap-px overflow-hidden bg-stone-100 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="grid gap-px overflow-hidden bg-stone-100 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { label: 'Status', value: <Badge tone={statusTone[status]} dot>{status}</Badge> },
-              { label: 'Bond amount', value: <span className="tabular text-lg font-semibold">{formatNaira(bond.totalAmount)}</span> },
-              { label: 'Service fee', value: <span className="tabular text-lg font-semibold">{formatNaira(bond.feeCharged)}</span> },
+              { label: 'Bail amount', value: <span className="tabular text-lg font-semibold">{formatNaira(charges.bail)}</span> },
+              { label: 'Paralex fee (10%)', value: <span className="tabular text-lg font-semibold">{formatNaira(charges.fee)}</span> },
+              { label: 'VAT (7.5% of fee)', value: <span className="tabular text-lg font-semibold">{formatNaira(charges.vat)}</span> },
+              { label: 'Total to pay', value: <span className="tabular text-lg font-semibold text-brand-900">{formatNaira(charges.total)}</span> },
               { label: 'Payment', value: bond.paid ? <Badge tone="success">Paid</Badge> : <Badge>Not paid</Badge> },
             ].map((item) => (
               <div key={item.label} className="bg-white px-5 py-4">

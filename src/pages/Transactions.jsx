@@ -1,40 +1,55 @@
 import { useState } from 'react';
 import { PiArrowsLeftRight, PiReceipt } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
-import { adminGetPayments, adminGetTransactionRequests } from '../api/api';
+import { adminGetPaymentLedger, adminGetTransactionRequests } from '../api/api';
 import { formatDate, formatNaira, humanize, toTimestamp } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
 import DataTable from '../components/ui/DataTable';
 import Badge from '../components/ui/Badge';
 
-// Paystack reports amounts in kobo
-const fromKobo = (amount) => (typeof amount === 'number' ? amount / 100 : null);
-
-const paymentTone = (status) => (status === 'success' ? 'success' : status === 'failed' || status === 'abandoned' ? 'danger' : 'warning');
+// The ledger already converts Paystack's kobo to naira
+const paymentTypes = {
+  DELIVERY: { label: 'Delivery', tone: 'brand' },
+  BAIL_BOND: { label: 'Bail bond', tone: 'warning' },
+  LITIGATION_SUPPORT: { label: 'Legal support', tone: 'neutral' },
+};
 
 const paymentColumns = [
   {
     key: 'reference',
     header: 'Reference',
-    sortValue: (p) => p.transactionReference || '',
-    render: (p) => <span className="tabular font-medium text-stone-900">{p.transactionReference || '—'}</span>,
+    sortValue: (p) => p.reference || '',
+    render: (p) => (
+      <div className="min-w-0">
+        <p className="tabular truncate font-medium text-stone-900">{p.reference || '—'}</p>
+        {p.description && <p className="max-w-xs truncate text-xs text-stone-500">{p.description}</p>}
+      </div>
+    ),
   },
-  { key: 'for', header: 'For', render: (p) => humanize(p.target) },
+  {
+    key: 'type',
+    header: 'Type',
+    sortValue: (p) => p.type || '',
+    render: (p) => {
+      const type = paymentTypes[p.type] || { label: humanize(p.type), tone: 'neutral' };
+      return <Badge tone={type.tone}>{type.label}</Badge>;
+    },
+  },
   {
     key: 'amount',
     header: 'Amount',
     className: 'text-right',
-    sortValue: (p) => p.gatewayResponse?.amount || 0,
-    render: (p) => <span className="tabular font-medium text-stone-900">{formatNaira(fromKobo(p.gatewayResponse?.amount))}</span>,
+    sortValue: (p) => Number(p.amount) || 0,
+    render: (p) => (
+      <span className="tabular font-medium text-stone-900" title={p.estimated ? 'Worked out from the bail amount; the exact paid figure was not recorded.' : undefined}>
+        {formatNaira(p.amount)}
+        {p.estimated && <span className="ml-1 text-xs font-normal text-stone-400">(est.)</span>}
+      </span>
+    ),
   },
-  { key: 'channel', header: 'Channel', render: (p) => humanize(p.gatewayResponse?.channel), mobileHidden: true },
-  {
-    key: 'status',
-    header: 'Status',
-    sortValue: (p) => p.gatewayResponse?.status || '',
-    render: (p) => <Badge tone={paymentTone(p.gatewayResponse?.status)} dot>{humanize(p.gatewayResponse?.status || 'unknown')}</Badge>,
-  },
-  { key: 'date', header: 'Date', sortValue: (p) => toTimestamp(p.time), render: (p) => <span className="tabular text-stone-500">{formatDate(p.time)}</span> },
+  { key: 'customer', header: 'Customer', render: (p) => p.customerEmail || '—', mobileHidden: true },
+  { key: 'channel', header: 'Channel', render: (p) => humanize(p.channel), mobileHidden: true },
+  { key: 'date', header: 'Paid', sortValue: (p) => toTimestamp(p.paidAt), render: (p) => <span className="tabular text-stone-500">{formatDate(p.paidAt)}</span> },
 ];
 
 const requestStatus = (r) => (r.suspended ? { label: 'Suspended', tone: 'danger' } : r.processed ? { label: 'Processed', tone: 'success' } : { label: 'Open', tone: 'warning' });
@@ -72,12 +87,12 @@ const tabs = [
 
 const Transactions = () => {
   const [tab, setTab] = useState('payments');
-  const payments = useAsync(adminGetPayments);
+  const payments = useAsync(adminGetPaymentLedger);
   const requests = useAsync(adminGetTransactionRequests);
 
   return (
     <>
-      <PageHeader title="Transactions" description="Payments made on Paralex, and legal transaction requests from users." />
+      <PageHeader title="Transactions" description="Successful payments for deliveries, bail bonds and legal support, and legal transaction requests from users." />
 
       <div className="mb-5 inline-flex gap-1 rounded-lg bg-stone-200/60 p-1" role="tablist">
         {tabs.map((t) => (
@@ -102,10 +117,16 @@ const Transactions = () => {
           loading={payments.loading}
           error={payments.error}
           onRetry={payments.reload}
-          searchText={(p) => `${p.transactionReference || ''} ${p.target || ''} ${p.gatewayResponse?.status || ''}`}
-          searchPlaceholder="Search by reference"
+          searchText={(p) => `${p.reference || ''} ${p.customerEmail || ''} ${p.description || ''}`}
+          searchPlaceholder="Search by reference or customer email"
+          filters={[
+            { label: 'All', value: 'all' },
+            { label: 'Deliveries', value: 'DELIVERY', predicate: (p) => p.type === 'DELIVERY' },
+            { label: 'Bail bonds', value: 'BAIL_BOND', predicate: (p) => p.type === 'BAIL_BOND' },
+            { label: 'Legal support', value: 'LITIGATION_SUPPORT', predicate: (p) => p.type === 'LITIGATION_SUPPORT' },
+          ]}
           initialSort={{ key: 'date', dir: 'desc' }}
-          empty={{ icon: PiReceipt, title: 'No payments yet', description: 'Card payments made through Paystack will appear here.' }}
+          empty={{ icon: PiReceipt, title: 'No payments yet', description: 'Successful delivery, bail bond and legal support payments will appear here.' }}
         />
       ) : (
         <>

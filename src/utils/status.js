@@ -14,3 +14,14 @@ export const accountStatus = (user) => {
   if (user?.enabled === false) return { label: "Inactive", tone: "neutral" };
   return { label: "Active", tone: "success" };
 };
+
+/**
+ * Lawyer state as the admin sees it. Blocked and admin-disabled lawyers are hidden from the app;
+ * `status === false` means the lawyer switched themselves off.
+ */
+export const lawyerStatus = (lawyer) => {
+  if (lawyer?.user?.accountBlocked) return { label: "Blocked", tone: "danger" };
+  if (lawyer?.disabledByAdmin) return { label: "Disabled", tone: "neutral" };
+  if (lawyer?.status === false) return { label: "Unavailable", tone: "warning" };
+  return { label: "Active", tone: "success" };
+};
