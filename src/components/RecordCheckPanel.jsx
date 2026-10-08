@@ -68,7 +68,7 @@ function MatchList({ title, items, empty, hrefOf, describe }) {
  * is really the applicant (names aren't unique).
  */
 export default function RecordCheckPanel({ bond, onChecked }) {
-  const [state, setState] = useState({ status: 'idle', lcis: [], bims: [], error: null });
+  const [state, setState] = useState({ status: 'idle', lcis: [], bims: [], bimsChecked: false, error: null });
   const [history, setHistory] = useState([]);
 
   // A check saved earlier (by anyone) already satisfies the pre-approval requirement
@@ -85,19 +85,20 @@ export default function RecordCheckPanel({ bond, onChecked }) {
   }, [bond.id]);
 
   const run = async () => {
-    setState({ status: 'running', lcis: [], bims: [], error: null });
+    setState({ status: 'running', lcis: [], bims: [], bimsChecked: false, error: null });
     try {
       const result = RECORDS_DEMO ? await demoCheck(bond) : await runRecordCheck(bond.id);
-      setState({ status: 'done', lcis: result.lcis || [], bims: result.bims || [], error: null });
+      // The demo build searches both sample sets; the server says whether BIMS was part of the check
+      setState({ status: 'done', lcis: result.lcis || [], bims: result.bims || [], bimsChecked: RECORDS_DEMO || Boolean(result.bimsChecked), error: null });
       if (result.check) setHistory((prev) => [result.check, ...prev]);
       onChecked?.({ saved: Boolean(result.check) });
     } catch (err) {
       if (err?.status === 503) {
-        // LCIS/BIMS aren't connected on the server yet: say so, and don't block approvals forever
-        setState({ status: 'unavailable', lcis: [], bims: [], error: null });
+        // LCIS isn't connected on the server yet: say so, and don't block approvals forever
+        setState({ status: 'unavailable', lcis: [], bims: [], bimsChecked: false, error: null });
         onChecked?.({ unavailable: true });
       } else {
-        setState({ status: 'error', lcis: [], bims: [], error: typeof err?.error === 'string' ? err.error : "The record systems couldn't be reached." });
+        setState({ status: 'error', lcis: [], bims: [], bimsChecked: false, error: typeof err?.error === 'string' ? err.error : "The record systems couldn't be reached." });
       }
     }
   };
@@ -108,8 +109,8 @@ export default function RecordCheckPanel({ bond, onChecked }) {
   return (
     <Card className="print:hidden">
       <CardHeader
-        title="Background check (LCIS & BIMS)"
-        description={RECORDS_DEMO ? 'Using sample records; checks are not saved.' : 'Searches the applicant’s name, phone and NIN. Each check is saved with who ran it.'}
+        title="Background check (LCIS)"
+        description={RECORDS_DEMO ? 'Using sample records; checks are not saved.' : 'Searches the applicant’s name and phone in the LCIS inmate records. Each check is saved with who ran it.'}
         actions={
           <Button variant={state.status === 'done' || last ? 'secondary' : 'primary'} icon={PiMagnifyingGlass} onClick={run} loading={state.status === 'running'}>
             {state.status === 'done' || last ? 'Run again' : 'Check records'}
@@ -130,7 +131,7 @@ export default function RecordCheckPanel({ bond, onChecked }) {
           <div className="flex gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200 ring-inset">
             <PiWarning className="mt-0.5 size-5 shrink-0" />
             <p>
-              <span className="font-medium">Background check unavailable.</span> LCIS and BIMS aren’t connected on the server yet, so this applicant couldn’t be checked.
+              <span className="font-medium">Background check unavailable.</span> LCIS isn’t connected on the server yet, so this applicant couldn’t be checked.
               You can still approve, but no check will be on record.
             </p>
           </div>
@@ -151,12 +152,12 @@ export default function RecordCheckPanel({ bond, onChecked }) {
             <div className="flex gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-200 ring-inset">
               <PiCheckCircle className="mt-0.5 size-5 shrink-0" />
               <p>
-                <span className="font-medium">No records found</span> in LCIS or BIMS for this applicant's name, phone or NIN.
+                <span className="font-medium">No records found</span> in {state.bimsChecked ? 'LCIS or BIMS' : 'LCIS'} for this applicant's name{state.bimsChecked ? ', phone or NIN' : ' or phone'}.
               </p>
             </div>
           ))}
         {state.status === 'done' && total > 0 && (
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className={`grid gap-5 ${state.bimsChecked ? 'lg:grid-cols-2' : ''}`}>
             <MatchList
               title="LCIS inmate records"
               items={state.lcis}
@@ -164,13 +165,15 @@ export default function RecordCheckPanel({ bond, onChecked }) {
               hrefOf={(r) => `/admin/lcis/record?lcis=${encodeURIComponent(r.lcis_number)}`}
               describe={(r) => [r.lcis_number, r.Offence].filter(Boolean).join(' · ')}
             />
-            <MatchList
-              title="BIMS bail records"
-              items={state.bims}
-              empty="No bail records."
-              hrefOf={(r) => `/admin/bims/${encodeURIComponent(r.id)}`}
-              describe={(r) => [r.uuid, r.defendant_offense].filter(Boolean).join(' · ')}
-            />
+            {state.bimsChecked && (
+              <MatchList
+                title="BIMS bail records"
+                items={state.bims}
+                empty="No bail records."
+                hrefOf={(r) => `/admin/bims/${encodeURIComponent(r.id)}`}
+                describe={(r) => [r.uuid, r.defendant_offense].filter(Boolean).join(' · ')}
+              />
+            )}
           </div>
         )}
         {history.length > 1 && (

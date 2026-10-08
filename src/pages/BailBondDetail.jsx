@@ -124,7 +124,7 @@ const BailBondDetail = () => {
                   <Button variant="danger-ghost" icon={PiX} onClick={() => setConfirm('reject')}>
                     Reject
                   </Button>
-                  <Button icon={PiCheck} onClick={() => setConfirm('approve')} disabled={!checked} title={checked ? undefined : 'Run the LCIS & BIMS check first'}>
+                  <Button icon={PiCheck} onClick={() => setConfirm('approve')} disabled={!checked} title={checked ? undefined : 'Run the LCIS check first'}>
                     Approve
                   </Button>
                 </>
