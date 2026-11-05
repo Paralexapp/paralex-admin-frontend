@@ -1,26 +1,20 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import { PiNewspaper, PiScales, PiBank, PiCoins } from 'react-icons/pi';
+import { PiNewspaper, PiTrash } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
-import { adminGetNews, adminPostNews } from '../api/api';
+import { adminDeleteNews, adminGetNews, adminPostNews, adminUploadMedia } from '../api/api';
 import { getAdminProfile } from '../api/authHelper';
-import { formatDate, humanize, toTimestamp } from '../utils/format';
+import { formatDate, toTimestamp } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
 import { Card, CardHeader } from '../components/ui/Card';
 import { Field, Input, Textarea } from '../components/ui/Form';
 import Button from '../components/ui/Button';
-import Badge from '../components/ui/Badge';
+import FileDrop from '../components/ui/FileDrop';
 import { ConfirmDialog } from '../components/ui/Modal';
 import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
 
-// Must match the backend's NewsSection enum
-const sections = [
-  { value: 'CRIMINAL', label: 'Criminal', icon: PiScales, description: 'Criminal law and court updates' },
-  { value: 'FINANCE', label: 'Finance', icon: PiCoins, description: 'Financial and commercial news' },
-  { value: 'GOVERNMENT', label: 'Government', icon: PiBank, description: 'Policy and government notices' },
-];
-
-const emptyForm = { section: 'CRIMINAL', title: '', content: '', imageUrl: '' };
+// The app shows one news feed (no sections), newest first.
+const emptyForm = { title: '', content: '', imageUrl: '' };
 
 export default function PostNewsForm() {
   const news = useAsync(adminGetNews);
@@ -28,6 +22,23 @@ export default function PostNewsForm() {
   const [errors, setErrors] = useState({});
   const [confirm, setConfirm] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [toDelete, setToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const remove = async () => {
+    setDeleting(true);
+    try {
+      await adminDeleteNews(toDelete.id);
+      toast.success('Post deleted. It no longer shows in the app.');
+      setToDelete(null);
+      news.reload();
+    } catch (err) {
+      toast.error(err.error || "We couldn't delete this post. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const set = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -47,15 +58,17 @@ export default function PostNewsForm() {
   const publish = async () => {
     setPublishing(true);
     try {
+      // An uploaded picture wins over a pasted link.
+      const imageUrl = imageFile ? await adminUploadMedia(imageFile) : form.imageUrl.trim() || null;
       await adminPostNews({
-        section: form.section,
         title: form.title.trim(),
         content: form.content.trim(),
-        imageUrl: form.imageUrl.trim() || null,
+        imageUrl,
         publishedBy: getAdminProfile().email || 'Paralex Admin',
       });
       toast.success('Published. App users have been notified.');
       setForm(emptyForm);
+      setImageFile(null);
       setConfirm(false);
       news.reload();
     } catch (err) {
@@ -76,45 +89,23 @@ export default function PostNewsForm() {
           <Card>
             <CardHeader title="New post" />
             <div className="space-y-5 p-6">
-              <Field label="Section" required>
-                <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Section">
-                  {sections.map(({ value, label, icon: Icon, description }) => {
-                    const selected = form.section === value;
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        onClick={() => set('section', value)}
-                        className={`flex items-start gap-3 rounded-xl p-3 text-left ring-1 ring-inset transition ${
-                          selected ? 'bg-brand-50 ring-brand-300' : 'ring-stone-200 hover:bg-stone-50'
-                        }`}
-                      >
-                        <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${selected ? 'bg-brand-900 text-white' : 'bg-stone-100 text-stone-500'}`}>
-                          <Icon className="size-4" />
-                        </span>
-                        <span>
-                          <span className="block text-sm font-medium text-stone-900">{label}</span>
-                          <span className="block text-xs text-stone-500">{description}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </Field>
               <Field label="Title" htmlFor="title" error={errors.title} required>
                 <Input id="title" placeholder="A clear, specific headline" value={form.title} onChange={(e) => set('title', e.target.value)} error={errors.title} />
               </Field>
               <Field label="Content" htmlFor="content" error={errors.content} required>
                 <Textarea id="content" className="min-h-56" placeholder="Write the full post…" value={form.content} onChange={(e) => set('content', e.target.value)} error={errors.content} />
               </Field>
-              <Field label="Image link" htmlFor="imageUrl" error={errors.imageUrl} hint="Optional. Paste a link to an image that's already online.">
-                <Input id="imageUrl" type="url" placeholder="https://…" value={form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} error={errors.imageUrl} />
+              <Field label="Picture" hint="Optional. Shown at the top of the post in the app.">
+                <FileDrop file={imageFile} onChange={setImageFile} />
               </Field>
+              {!imageFile && (
+                <Field label="Or paste an image link" htmlFor="imageUrl" error={errors.imageUrl}>
+                  <Input id="imageUrl" type="url" placeholder="https://…" value={form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} error={errors.imageUrl} />
+                </Field>
+              )}
             </div>
             <div className="flex justify-end gap-2 border-t border-stone-100 px-6 py-4">
-              <Button variant="secondary" onClick={() => { setForm(emptyForm); setErrors({}); }}>
+              <Button variant="secondary" onClick={() => { setForm(emptyForm); setImageFile(null); setErrors({}); }}>
                 Clear
               </Button>
               <Button type="submit">Publish</Button>
@@ -135,12 +126,24 @@ export default function PostNewsForm() {
           ) : published.length ? (
             <ul className="max-h-[36rem] divide-y divide-stone-100 overflow-y-auto">
               {published.map((item) => (
-                <li key={item.id} className="px-5 py-3.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <Badge tone="brand">{humanize(item.section)}</Badge>
+                <li key={item.id} className="flex items-start gap-3 px-5 py-3.5">
+                  {item.imageUrl && /^https?:/i.test(item.imageUrl) ? (
+                    <img src={item.imageUrl} alt="" className="size-12 shrink-0 rounded-lg object-cover" />
+                  ) : (
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-400"><PiNewspaper className="size-5" /></span>
+                  )}
+                  <div className="min-w-0 flex-1">
                     <span className="tabular text-xs text-stone-400">{formatDate(item.publishedDate)}</span>
+                    <p className="line-clamp-2 text-sm font-medium text-stone-900">{item.title}</p>
                   </div>
-                  <p className="mt-1.5 line-clamp-2 text-sm font-medium text-stone-900">{item.title}</p>
+                  <button
+                    type="button"
+                    onClick={() => setToDelete(item)}
+                    aria-label={`Delete ${item.title}`}
+                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-red-50 hover:text-red-600"
+                  >
+                    <PiTrash className="size-4" />
+                  </button>
                 </li>
               ))}
             </ul>
@@ -159,6 +162,17 @@ export default function PostNewsForm() {
         description="It goes live in the app straight away and every app user gets a notification."
         confirmLabel="Publish"
         tone="primary"
+      />
+
+      <ConfirmDialog
+        open={!!toDelete}
+        onClose={() => !deleting && setToDelete(null)}
+        onConfirm={remove}
+        loading={deleting}
+        title="Delete this post?"
+        description={toDelete ? `"${toDelete.title}" will disappear from the app's news feed. This can't be undone.` : ''}
+        confirmLabel="Delete"
+        tone="danger"
       />
     </>
   );

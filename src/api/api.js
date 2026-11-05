@@ -160,6 +160,21 @@ export const adminPostNews = async (news) => {
     return handleAdminRequest('POST', 'api/news/post', news);
 }
 
+/** Delete a news post (admin only) */
+export const adminDeleteNews = async (id) => {
+    return handleAdminRequest('POST', `api/news/delete/${encodeURIComponent(id)}`);
+}
+
+/** Upload an image and get back its public link (same upload the app uses) */
+export const adminUploadMedia = async (file) => {
+    const form = new FormData();
+    form.append('file', file);
+    const body = await handleAdminRequest('POST', 'api/v1/auth/upload-media', form);
+    const url = body?.secure_url || body?.url || body?.data?.secure_url || body?.data?.url || (typeof body?.data === 'string' ? body.data : null);
+    if (!url) throw { success: false, error: "The image uploaded but no link came back. Try again or paste a link." };
+    return url;
+}
+
 /** Driver (rider) profiles; the trailing slash in the path is required */
 export const adminGetDrivers = async () => {
     return handleAdminRequest('GET', 'service-provider/driver/profile/', null, {
