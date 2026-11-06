@@ -6,9 +6,13 @@ export const driverName = (driver) => (driver?.user ? getDisplayName(driver.user
 /** The user id the admin enable/disable endpoints expect (profile id == user id today) */
 export const driverUserId = (driver) => driver?.userId || driver?.user?.id || driver?.id;
 
-/** Rider state: `status` = allowed to take jobs, `offline` = off duty */
+/**
+ * Rider state: `status` = approved to take jobs, `offline` = off duty. A rider who is off and was
+ * never switched off by an admin is new and waiting for approval.
+ */
 export const driverStatus = (driver) => {
-  if (!driver?.status) return { label: "Disabled", tone: "neutral" };
+  if (!driver?.status && driver?.disabledByAdmin) return { label: "Disabled", tone: "neutral" };
+  if (!driver?.status) return { label: "Awaiting approval", tone: "warning" };
   if (driver?.offline) return { label: "Offline", tone: "warning" };
   return { label: "Available", tone: "success" };
 };

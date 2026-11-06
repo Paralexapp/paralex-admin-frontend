@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import { PiNewspaper, PiTrash } from 'react-icons/pi';
+import { PiNewspaper, PiPencilSimple, PiTrash } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
-import { adminDeleteNews, adminGetNews, adminPostNews, adminUploadMedia } from '../api/api';
+import { adminDeleteNews, adminGetNews, adminPostNews, adminUpdateNews, adminUploadMedia } from '../api/api';
 import { getAdminProfile } from '../api/authHelper';
 import { formatDate, toTimestamp } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
@@ -25,12 +25,30 @@ export default function PostNewsForm() {
   const [imageFile, setImageFile] = useState(null);
   const [toDelete, setToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  // The post being edited, or null when writing a new one.
+  const [editing, setEditing] = useState(null);
+
+  const startEdit = (item) => {
+    setEditing(item);
+    setForm({ title: item.title || '', content: item.content || '', imageUrl: item.imageUrl || '' });
+    setImageFile(null);
+    setErrors({});
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const reset = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setImageFile(null);
+    setErrors({});
+  };
 
   const remove = async () => {
     setDeleting(true);
     try {
       await adminDeleteNews(toDelete.id);
       toast.success('Post deleted. It no longer shows in the app.');
+      if (editing && editing.id === toDelete.id) reset();
       setToDelete(null);
       news.reload();
     } catch (err) {
@@ -60,19 +78,24 @@ export default function PostNewsForm() {
     try {
       // An uploaded picture wins over a pasted link.
       const imageUrl = imageFile ? await adminUploadMedia(imageFile) : form.imageUrl.trim() || null;
-      await adminPostNews({
-        title: form.title.trim(),
-        content: form.content.trim(),
-        imageUrl,
-        publishedBy: getAdminProfile().email || 'Paralex Admin',
-      });
-      toast.success('Published. App users have been notified.');
-      setForm(emptyForm);
-      setImageFile(null);
+      if (editing) {
+        // Empty picture = remove it (the server treats "" as "no picture").
+        await adminUpdateNews(editing.id, { title: form.title.trim(), content: form.content.trim(), imageUrl: imageUrl || '' });
+        toast.success('Changes saved. The app shows the updated post.');
+      } else {
+        await adminPostNews({
+          title: form.title.trim(),
+          content: form.content.trim(),
+          imageUrl,
+          publishedBy: getAdminProfile().email || 'Paralex Admin',
+        });
+        toast.success('Published. App users have been notified.');
+      }
+      reset();
       setConfirm(false);
       news.reload();
     } catch (err) {
-      toast.error(err.error || "We couldn't publish this post. Please try again.");
+      toast.error(err.error || (editing ? "We couldn't save your changes. Please try again." : "We couldn't publish this post. Please try again."));
     } finally {
       setPublishing(false);
     }
@@ -87,7 +110,7 @@ export default function PostNewsForm() {
       <div className="grid items-start gap-6 lg:grid-cols-3">
         <form onSubmit={validate} noValidate className="space-y-6 lg:col-span-2">
           <Card>
-            <CardHeader title="New post" />
+            <CardHeader title={editing ? 'Edit post' : 'New post'} description={editing ? `Published ${formatDate(editing.publishedDate)}. Saving won't notify users again.` : null} />
             <div className="space-y-5 p-6">
               <Field label="Title" htmlFor="title" error={errors.title} required>
                 <Input id="title" placeholder="A clear, specific headline" value={form.title} onChange={(e) => set('title', e.target.value)} error={errors.title} />
@@ -98,6 +121,12 @@ export default function PostNewsForm() {
               <Field label="Picture" hint="Optional. Shown at the top of the post in the app.">
                 <FileDrop file={imageFile} onChange={setImageFile} />
               </Field>
+              {editing && !imageFile && form.imageUrl && /^https?:/i.test(form.imageUrl) && (
+                <div className="flex items-center gap-3">
+                  <img src={form.imageUrl} alt="" className="size-16 rounded-lg object-cover" />
+                  <Button variant="secondary" onClick={() => set('imageUrl', '')}>Remove picture</Button>
+                </div>
+              )}
               {!imageFile && (
                 <Field label="Or paste an image link" htmlFor="imageUrl" error={errors.imageUrl}>
                   <Input id="imageUrl" type="url" placeholder="https://…" value={form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} error={errors.imageUrl} />
@@ -105,10 +134,10 @@ export default function PostNewsForm() {
               )}
             </div>
             <div className="flex justify-end gap-2 border-t border-stone-100 px-6 py-4">
-              <Button variant="secondary" onClick={() => { setForm(emptyForm); setImageFile(null); setErrors({}); }}>
-                Clear
+              <Button variant="secondary" onClick={reset}>
+                {editing ? 'Cancel editing' : 'Clear'}
               </Button>
-              <Button type="submit">Publish</Button>
+              <Button type="submit">{editing ? 'Save changes' : 'Publish'}</Button>
             </div>
           </Card>
         </form>
@@ -138,6 +167,14 @@ export default function PostNewsForm() {
                   </div>
                   <button
                     type="button"
+                    onClick={() => startEdit(item)}
+                    aria-label={`Edit ${item.title}`}
+                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+                  >
+                    <PiPencilSimple className="size-4" />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setToDelete(item)}
                     aria-label={`Delete ${item.title}`}
                     className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-red-50 hover:text-red-600"
@@ -158,9 +195,9 @@ export default function PostNewsForm() {
         onClose={() => !publishing && setConfirm(false)}
         onConfirm={publish}
         loading={publishing}
-        title="Publish this post?"
-        description="It goes live in the app straight away and every app user gets a notification."
-        confirmLabel="Publish"
+        title={editing ? 'Save changes to this post?' : 'Publish this post?'}
+        description={editing ? 'The post updates in the app straight away. Users are not notified again.' : 'It goes live in the app straight away and every app user gets a notification.'}
+        confirmLabel={editing ? 'Save changes' : 'Publish'}
         tone="primary"
       />
 

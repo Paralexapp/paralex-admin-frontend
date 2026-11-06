@@ -11,6 +11,7 @@ import {
   PiSealCheck,
   PiIdentificationCard,
   PiFolderOpen,
+  PiArrowSquareOut,
 } from "react-icons/pi";
 import { ADMIN_VERIFYLAWYER_URL } from "../utils/constants";
 
@@ -25,6 +26,7 @@ export const navSections = [
     items: [
       { to: "/admin/users", label: "Users", icon: PiUsers, match: ["/admin/user/", "/admin/add-user"] },
       { to: "/admin/lawyers", label: "Lawyers", icon: PiGavel, match: ["/admin/lawyer/", "/admin/add-lawyer"] },
+      { to: "/admin/lawyer-verification", label: "Lawyer verification", icon: PiSealCheck },
       { to: "/admin/drivers", label: "Drivers", icon: PiSteeringWheel, match: ["/admin/driver/", "/admin/add-driver"] },
     ],
   },
@@ -47,7 +49,7 @@ export const navSections = [
     label: "Content",
     items: [
       { to: "/admin/post-news", label: "Post news", icon: PiNewspaper },
-      { href: ADMIN_VERIFYLAWYER_URL, label: "Verify a lawyer", icon: PiSealCheck, external: true },
+      { href: ADMIN_VERIFYLAWYER_URL, label: "NBA lawyer search", icon: PiArrowSquareOut, external: true },
     ],
   },
   {
@@ -64,6 +66,7 @@ const titles = [
   ["/admin/add-user", "Add user"],
   ["/admin/lawyers", "Lawyers"],
   ["/admin/lawyer/", "Lawyer profile"],
+  ["/admin/lawyer-verification", "Lawyer verification"],
   ["/admin/add-lawyer", "Add lawyer"],
   ["/admin/drivers", "Drivers"],
   ["/admin/driver/", "Driver profile"],

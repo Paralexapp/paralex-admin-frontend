@@ -38,6 +38,7 @@ export const router = createBrowserRouter([
           { path: "lawyers", lazy: page(() => import("./pages/Lawyers")) },
           { path: "add-lawyer", lazy: page(() => import("./pages/AddLawyer")) },
           { path: "lawyer/:userId", lazy: page(() => import("./pages/LawyerProfile")) },
+          { path: "lawyer-verification", lazy: page(() => import("./pages/LawyerVerification")) },
           { path: "users", lazy: page(() => import("./pages/Users")) },
           { path: "add-user", lazy: page(() => import("./pages/AddUser")) },
           { path: "user/:userId", lazy: page(() => import("./pages/UserProfile")) },

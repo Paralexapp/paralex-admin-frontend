@@ -160,6 +160,21 @@ export const adminPostNews = async (news) => {
     return handleAdminRequest('POST', 'api/news/post', news);
 }
 
+/** Lawyers and bailiffs by verification state: PENDING (to verify), VERIFIED, REJECTED or ALL */
+export const adminGetLawyerVerifications = async (status = 'PENDING') => {
+    return handleAdminRequest('GET', 'legal/v2/admin/lawyers', null, { status });
+}
+
+/** Verify (approve=true) or reject a lawyer/bailiff; they get a notification with the note */
+export const adminDecideLawyer = async (userId, approve, note) => {
+    return handleAdminRequest('POST', `legal/v2/admin/lawyers/${encodeURIComponent(userId)}`, { approve, note: note || null });
+}
+
+/** Edit a news post (admin only); does not notify users again */
+export const adminUpdateNews = async (id, changes) => {
+    return handleAdminRequest('POST', `api/news/update/${encodeURIComponent(id)}`, changes);
+}
+
 /** Delete a news post (admin only) */
 export const adminDeleteNews = async (id) => {
     return handleAdminRequest('POST', `api/news/delete/${encodeURIComponent(id)}`);

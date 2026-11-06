@@ -81,6 +81,7 @@ const Drivers = () => {
         searchPlaceholder="Search by name, email or phone"
         filters={[
           { label: 'All', value: 'all' },
+          { label: 'Awaiting approval', value: 'Awaiting approval', predicate: byStatus('Awaiting approval') },
           { label: 'Available', value: 'Available', predicate: byStatus('Available') },
           { label: 'Offline', value: 'Offline', predicate: byStatus('Offline') },
           { label: 'Disabled', value: 'Disabled', predicate: byStatus('Disabled') },

@@ -55,6 +55,7 @@ const DriverProfile = () => {
   const name = driverName(driver);
   const status = driverStatus(driver);
   const enabled = Boolean(driver?.status);
+  const awaiting = !enabled && !driver?.disabledByAdmin;
 
   const blocked = Boolean(driver?.user?.accountBlocked);
   const riderId = driverUserId(driver);
@@ -70,12 +71,14 @@ const DriverProfile = () => {
       done: `${name} was disabled.`,
     },
     enable: {
-      title: `Enable ${name}?`,
-      description: 'They will be able to take deliveries and appear as a nearby rider.',
-      confirmLabel: 'Enable driver',
+      title: awaiting ? `Approve ${name}?` : `Enable ${name}?`,
+      description: awaiting
+        ? 'Check their ID, bike and guarantor details first. Once approved they can go online and take deliveries.'
+        : 'They will be able to take deliveries and appear as a nearby rider.',
+      confirmLabel: awaiting ? 'Approve rider' : 'Enable driver',
       tone: 'primary',
       run: () => adminEnableRider(riderId),
-      done: `${name} was enabled.`,
+      done: awaiting ? `${name} is approved.` : `${name} was enabled.`,
     },
     block: {
       title: `Block ${name}?`,
@@ -134,7 +137,7 @@ const DriverProfile = () => {
             !loading && (
               <div className="flex flex-wrap gap-2">
                 <Button variant={enabled ? 'danger-ghost' : 'primary'} icon={enabled ? PiProhibit : PiPower} onClick={() => setConfirm(enabled ? 'disable' : 'enable')}>
-                  {enabled ? 'Disable driver' : 'Enable driver'}
+                  {enabled ? 'Disable driver' : awaiting ? 'Approve rider' : 'Enable driver'}
                 </Button>
                 <Button variant="secondary" icon={blocked ? PiLockOpen : PiLock} onClick={() => setConfirm(blocked ? 'unblock' : 'block')}>
                   {blocked ? 'Unblock' : 'Block'}
