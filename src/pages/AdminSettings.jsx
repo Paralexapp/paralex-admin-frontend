@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import { PiPlus, PiShieldCheck, PiUsersThree } from 'react-icons/pi';
+import { PiPlus, PiShieldCheck, PiTrash, PiUsersThree } from 'react-icons/pi';
 import useAsync from '../hooks/useAsync';
-import { adminCreateAdmin, adminGetAllAdmins } from '../api/api';
+import { adminCreateAdmin, adminDeleteUser, adminGetAllAdmins } from '../api/api';
 import { getAdminProfile } from '../api/authHelper';
 import { getDisplayName } from '../utils/userUtils';
 import { formatDate, toTimestamp } from '../utils/format';
@@ -11,7 +11,7 @@ import DataTable from '../components/ui/DataTable';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-import Modal from '../components/ui/Modal';
+import Modal, { ConfirmDialog } from '../components/ui/Modal';
 import { Field, Input } from '../components/ui/Form';
 
 export default function AdminSettings() {
@@ -22,6 +22,26 @@ export default function AdminSettings() {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [removing, setRemoving] = useState(null); // the admin to remove
+  const [working, setWorking] = useState(false);
+  const admins = Array.isArray(data) ? data : [];
+  const isMe = (admin) => (admin.email || '').toLowerCase() === (me.email || '').toLowerCase();
+
+  /** Removes another admin's account. Never yourself, never the last admin. */
+  const remove = async () => {
+    if (!removing) return;
+    setWorking(true);
+    try {
+      await adminDeleteUser(removing.id);
+      toast.success(`${getDisplayName(removing)} was removed. They can no longer sign in to the dashboard.`);
+      setRemoving(null);
+      reload();
+    } catch (err) {
+      toast.error(typeof err?.error === 'string' ? err.error : "We couldn't remove this admin. Please try again.");
+    } finally {
+      setWorking(false);
+    }
+  };
 
   const columns = [
     {
@@ -43,6 +63,16 @@ export default function AdminSettings() {
     },
     { key: 'role', header: 'Role', render: () => <Badge tone="neutral"><PiShieldCheck className="size-3.5" /> Admin</Badge> },
     { key: 'added', header: 'Added', sortValue: (admin) => toTimestamp(admin.time), render: (admin) => <span className="tabular text-stone-500">{formatDate(admin.time)}</span> },
+    {
+      key: 'actions',
+      header: '',
+      render: (admin) =>
+        isMe(admin) || admins.length <= 1 || !admin.id ? null : (
+          <Button variant="secondary" size="sm" icon={PiTrash} onClick={() => setRemoving(admin)}>
+            Remove
+          </Button>
+        ),
+    },
   ];
 
   const close = () => {
@@ -101,6 +131,20 @@ export default function AdminSettings() {
         searchPlaceholder="Search admins"
         initialSort={{ key: 'added', dir: 'asc' }}
         empty={{ icon: PiUsersThree, title: 'No admins found' }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(removing)}
+        onClose={() => !working && setRemoving(null)}
+        onConfirm={remove}
+        loading={working}
+        confirmLabel="Remove admin"
+        title={removing ? `Remove ${getDisplayName(removing)}?` : ''}
+        description={
+          removing
+            ? `${removing.email} will lose access to this dashboard straight away. Their account is deleted and this can't be undone. Records they worked on stay.`
+            : ''
+        }
       />
 
       <Modal
