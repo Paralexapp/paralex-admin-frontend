@@ -270,3 +270,33 @@ export const adminEnableLawyer = async (userId) => {
 export const adminGetPaymentLedger = async () => {
     return handleAdminRequest('GET', 'admin/payments');
 }
+
+/** Delivery orders (app 2.x), newest first */
+export const adminGetDeliveryOrders = async () => {
+    return handleAdminRequest('GET', 'admin/ops/deliveries', null, { limit: 1000 });
+}
+
+/** One delivery with customer, rider, route, payment, timeline and proof photo (order or request id) */
+export const adminGetDeliveryOrder = async (id) => {
+    return handleAdminRequest('GET', `admin/ops/deliveries/${encodeURIComponent(id)}`);
+}
+
+/** All Nigerian banks, A to Z: [{ code, name }] */
+export const adminGetBanks = async () => {
+    return handleAdminRequest('GET', 'admin/ops/banks');
+}
+
+/** Check an account number with the bank; returns { accountName } */
+export const adminResolveAccount = async (bankCode, accountNumber) => {
+    return handleAdminRequest('GET', 'admin/ops/resolve-account', null, { bankCode, accountNumber });
+}
+
+/** A rider's or lawyer's payout account (BVN masked) */
+export const adminGetPayoutAccount = async (userId) => {
+    return handleAdminRequest('GET', `admin/ops/payout-account/${encodeURIComponent(userId)}`);
+}
+
+/** Change a payout account: { userId, bankCode, bankName, accountNumber, bvn? } */
+export const adminUpdatePayoutAccount = async (body) => {
+    return handleAdminRequest('PUT', 'admin/ops/payout-account', body);
+}

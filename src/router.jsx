@@ -47,6 +47,7 @@ export const router = createBrowserRouter([
           { path: "driver/:driverId", lazy: page(() => import("./pages/DriverProfile")) },
           { path: "notifications", lazy: page(() => import("./pages/Notifications")) },
           { path: "logistics", lazy: page(() => import("./pages/DeliveryRequest")) },
+          { path: "delivery/:id", lazy: page(() => import("./pages/DeliveryDetail")) },
           { path: "transaction", lazy: page(() => import("./pages/Transactions")) },
           { path: "bailbond/:id", lazy: page(() => import("./pages/BailBondDetail")) },
           // Old sample-document route; the detail page replaced it

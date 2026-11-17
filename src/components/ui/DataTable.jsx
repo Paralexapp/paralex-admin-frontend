@@ -18,6 +18,7 @@ const pageWindow = (current, total) => {
  * columns: [{ key, header, render(row), sortValue?(row), className?, mobileHidden? }]
  * filters: [{ label, value, predicate(row) }] shown as tabs; the first is the default
  * rowHref(row): makes rows clickable (navigates on click / Enter)
+ * onRowClick(row): makes rows clickable without navigating (e.g. opens a detail panel)
  */
 export default function DataTable({
   columns,
@@ -30,6 +31,7 @@ export default function DataTable({
   searchPlaceholder = "Search…",
   filters,
   rowHref,
+  onRowClick,
   pageSize = 10,
   empty = {},
   toolbar,
@@ -72,9 +74,9 @@ export default function DataTable({
     setSort((prev) => (prev?.key === column.key ? { key: column.key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key: column.key, dir: "asc" }));
   };
 
-  const open = (row) => rowHref && navigate(rowHref(row));
+  const open = (row) => (onRowClick ? onRowClick(row) : rowHref && navigate(rowHref(row)));
   const rowProps = (row) =>
-    rowHref
+    rowHref || onRowClick
       ? {
           onClick: () => open(row),
           onKeyDown: (event) => event.key === "Enter" && open(row),

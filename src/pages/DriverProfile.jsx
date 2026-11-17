@@ -9,6 +9,7 @@ import { driverName, driverStatus, driverUserId, masked } from '../utils/drivers
 import PageHeader from '../components/ui/PageHeader';
 import ProfileHero from '../components/ProfileHero';
 import { Card, CardHeader } from '../components/ui/Card';
+import PayoutAccountCard from '../components/PayoutAccountCard';
 import DetailList from '../components/ui/DetailList';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -181,19 +182,17 @@ const DriverProfile = () => {
               </div>
             </Card>
             <Card>
-              <CardHeader title="Bank and identity" description="Numbers are partly hidden." />
+              <CardHeader title="Identity" description="Numbers are partly hidden." />
               <div className="p-6">
                 <DetailList
                   items={[
-                    { label: 'Bank', value: driver.bankName },
-                    { label: 'Account name', value: driver.accountName },
-                    { label: 'Account number', value: masked(driver.accountNumber) },
                     { label: 'BVN', value: masked(driver.bvn) },
                     { label: 'NIN', value: masked(driver.nin) },
                   ]}
                 />
               </div>
             </Card>
+            <PayoutAccountCard userId={driver.userId || driver.creatorId || driver.user?.id} />
           </div>
         )}
       </div>

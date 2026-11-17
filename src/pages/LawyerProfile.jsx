@@ -10,6 +10,7 @@ import { formatDate } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
 import ProfileHero from '../components/ProfileHero';
 import { Card, CardHeader } from '../components/ui/Card';
+import PayoutAccountCard from '../components/PayoutAccountCard';
 import DetailList from '../components/ui/DetailList';
 import Badge from '../components/ui/Badge';
 import { ErrorState, Skeleton } from '../components/ui/States';
@@ -186,6 +187,9 @@ const LawyerProfile = () => {
               )}
             </div>
           </Card>
+          <div className="lg:col-span-3">
+            <PayoutAccountCard userId={userId} />
+          </div>
         </div>
       </div>
       <EditLawyerModal open={editing} onClose={() => setEditing(false)} lawyer={lawyer} userId={userId} onSaved={reload} />

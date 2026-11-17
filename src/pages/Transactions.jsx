@@ -6,12 +6,30 @@ import { formatDate, formatNaira, humanize, toTimestamp } from '../utils/format'
 import PageHeader from '../components/ui/PageHeader';
 import DataTable from '../components/ui/DataTable';
 import Badge from '../components/ui/Badge';
+import Modal from '../components/ui/Modal';
+import DetailList from '../components/ui/DetailList';
+import Button from '../components/ui/Button';
+import { useNavigate } from 'react-router-dom';
 
 // The ledger already converts Paystack's kobo to naira
 const paymentTypes = {
   DELIVERY: { label: 'Delivery', tone: 'brand' },
   BAIL_BOND: { label: 'Bail bond', tone: 'warning' },
   LITIGATION_SUPPORT: { label: 'Legal support', tone: 'neutral' },
+  LEGAL: { label: 'Lawyer / consultation', tone: 'success' },
+};
+
+const statusTone = (status = '') => {
+  const s = status.toLowerCase();
+  if (s.includes('refund') || s.includes('cancel') || s.includes('expired')) return 'danger';
+  if (s.includes('delivered') || s.includes('completed')) return 'success';
+  return 'warning';
+};
+
+/** A value from the server's details map: dates read as dates, everything else as text. */
+const detailValue = (value) => {
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) return formatDate(value);
+  return String(value);
 };
 
 const paymentColumns = [
@@ -46,6 +64,13 @@ const paymentColumns = [
         {p.estimated && <span className="ml-1 text-xs font-normal text-stone-400">(est.)</span>}
       </span>
     ),
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    sortValue: (p) => p.status || '',
+    render: (p) => (p.status ? <Badge tone={statusTone(p.status)} dot>{p.status}</Badge> : <span className="text-stone-400">—</span>),
+    mobileHidden: true,
   },
   { key: 'customer', header: 'Customer', render: (p) => p.customerEmail || '—', mobileHidden: true },
   { key: 'channel', header: 'Channel', render: (p) => humanize(p.channel), mobileHidden: true },
@@ -85,14 +110,59 @@ const tabs = [
   { value: 'requests', label: 'Transaction requests' },
 ];
 
+/** Everything about one payment, from the row the list already loaded. */
+const PaymentDetail = ({ payment, onClose }) => {
+  const navigate = useNavigate();
+  if (!payment) return null;
+  const type = paymentTypes[payment.type] || { label: humanize(payment.type), tone: 'neutral' };
+  const items = [
+    { label: 'Amount', value: formatNaira(payment.amount) + (payment.estimated ? ' (estimated)' : '') },
+    { label: 'Type', value: type.label },
+    { label: 'Status', value: payment.status },
+    { label: 'Paid', value: formatDate(payment.paidAt) },
+    { label: 'Reference', value: payment.reference, wide: true },
+    { label: 'Description', value: payment.description, wide: true },
+    { label: 'Customer email', value: payment.customerEmail },
+    { label: 'Channel', value: humanize(payment.channel) },
+    ...Object.entries(payment.details || {})
+      .filter(([label]) => !['Paid', 'Customer email', 'Total'].includes(label))
+      .map(([label, value]) => ({ label, value: detailValue(value), wide: ['Pickup', 'Drop-off', 'Title'].includes(label) })),
+  ];
+  const link =
+    payment.subjectType === 'DELIVERY_ORDER' ? `/admin/delivery/${encodeURIComponent(payment.subjectId)}`
+      : payment.type === 'BAIL_BOND' && payment.subjectId ? `/admin/bailbond/${encodeURIComponent(payment.subjectId)}`
+        : null;
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      size="lg"
+      title={`Payment · ${formatNaira(payment.amount)}`}
+      description={payment.description || type.label}
+      footer={
+        <>
+          {link && <Button variant="secondary" onClick={() => navigate(link)}>Open {payment.subjectType === 'DELIVERY_ORDER' ? 'delivery' : 'bail bond'}</Button>}
+          <Button onClick={onClose}>Close</Button>
+        </>
+      }
+    >
+      <div className="max-h-[60vh] overflow-y-auto pb-2">
+        <DetailList items={items} />
+      </div>
+    </Modal>
+  );
+};
+
 const Transactions = () => {
   const [tab, setTab] = useState('payments');
+  const [selected, setSelected] = useState(null);
   const payments = useAsync(adminGetPaymentLedger);
   const requests = useAsync(adminGetTransactionRequests);
 
   return (
     <>
-      <PageHeader title="Transactions" description="Successful payments for deliveries, bail bonds and legal support, and legal transaction requests from users." />
+      <PageHeader title="Transactions" description="Every successful payment (deliveries, lawyers and consultations, bail bonds, legal support) and legal transaction requests. Click a payment to see its details." />
+      <PaymentDetail payment={selected} onClose={() => setSelected(null)} />
 
       <div className="mb-5 inline-flex gap-1 rounded-lg bg-stone-200/60 p-1" role="tablist">
         {tabs.map((t) => (
@@ -117,11 +187,14 @@ const Transactions = () => {
           loading={payments.loading}
           error={payments.error}
           onRetry={payments.reload}
-          searchText={(p) => `${p.reference || ''} ${p.customerEmail || ''} ${p.description || ''}`}
-          searchPlaceholder="Search by reference or customer email"
+          searchText={(p) => `${p.reference || ''} ${p.customerEmail || ''} ${p.description || ''} ${p.status || ''}`}
+          searchPlaceholder="Search by reference, customer email or description"
+          onRowClick={setSelected}
+          getRowKey={(p, i) => p.reference || p.id || i}
           filters={[
             { label: 'All', value: 'all' },
             { label: 'Deliveries', value: 'DELIVERY', predicate: (p) => p.type === 'DELIVERY' },
+            { label: 'Lawyers', value: 'LEGAL', predicate: (p) => p.type === 'LEGAL' },
             { label: 'Bail bonds', value: 'BAIL_BOND', predicate: (p) => p.type === 'BAIL_BOND' },
             { label: 'Legal support', value: 'LITIGATION_SUPPORT', predicate: (p) => p.type === 'LITIGATION_SUPPORT' },
           ]}
