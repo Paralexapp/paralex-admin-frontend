@@ -74,7 +74,7 @@ const DriverProfile = () => {
     enable: {
       title: awaiting ? `Approve ${name}?` : `Enable ${name}?`,
       description: awaiting
-        ? 'Check their ID, bike and guarantor details first. Once approved they can go online and take deliveries.'
+        ? 'Check their ID and vehicle details first. Once approved they can go online and take deliveries.'
         : 'They will be able to take deliveries and appear as a nearby rider.',
       confirmLabel: awaiting ? 'Approve rider' : 'Enable driver',
       tone: 'primary',
@@ -167,6 +167,8 @@ const DriverProfile = () => {
                 />
               </div>
             </Card>
+            {/* Riders who signed up before Nov 2026 gave a guarantor; newer riders aren't asked. */}
+            {(driver.guarantorPhoneNumber || driver.guarantorEmail || driver.guarantorClass) && (
             <Card>
               <CardHeader title="Guarantor" />
               <div className="p-6">
@@ -181,6 +183,7 @@ const DriverProfile = () => {
                 />
               </div>
             </Card>
+            )}
             <Card>
               <CardHeader title="Identity" description="Numbers are partly hidden." />
               <div className="p-6">
