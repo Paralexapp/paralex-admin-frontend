@@ -300,3 +300,28 @@ export const adminGetPayoutAccount = async (userId) => {
 export const adminUpdatePayoutAccount = async (body) => {
     return handleAdminRequest('PUT', 'admin/ops/payout-account', body);
 }
+
+/** Lawyer network posts: filter ALL (live), REPORTED (live, reported) or REMOVED */
+export const adminGetNetworkPosts = async (filter = 'ALL') => {
+    return handleAdminRequest('GET', 'legal/v2/admin/network/posts', null, { filter });
+}
+
+/** Every comment on a network post, removed ones included */
+export const adminGetNetworkComments = async (postId) => {
+    return handleAdminRequest('GET', `legal/v2/admin/network/posts/${encodeURIComponent(postId)}/comments`);
+}
+
+/** Remove a network post; the lawyer is notified with the reason */
+export const adminRemoveNetworkPost = async (postId, reason) => {
+    return handleAdminRequest('POST', `legal/v2/admin/network/posts/${encodeURIComponent(postId)}/remove`, { reason });
+}
+
+/** Put back a post an admin removed */
+export const adminRestoreNetworkPost = async (postId) => {
+    return handleAdminRequest('POST', `legal/v2/admin/network/posts/${encodeURIComponent(postId)}/restore`);
+}
+
+/** Remove a comment; its writer is notified with the reason */
+export const adminRemoveNetworkComment = async (commentId, reason) => {
+    return handleAdminRequest('POST', `legal/v2/admin/network/comments/${encodeURIComponent(commentId)}/remove`, { reason });
+}

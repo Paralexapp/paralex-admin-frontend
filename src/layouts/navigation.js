@@ -12,6 +12,7 @@ import {
   PiIdentificationCard,
   PiFolderOpen,
   PiArrowSquareOut,
+  PiUsersThree,
 } from "react-icons/pi";
 import { ADMIN_VERIFYLAWYER_URL } from "../utils/constants";
 
@@ -49,6 +50,7 @@ export const navSections = [
     label: "Content",
     items: [
       { to: "/admin/post-news", label: "Post news", icon: PiNewspaper },
+      { to: "/admin/network-posts", label: "Network posts", icon: PiUsersThree },
       { href: ADMIN_VERIFYLAWYER_URL, label: "NBA lawyer search", icon: PiArrowSquareOut, external: true },
     ],
   },
@@ -76,6 +78,7 @@ const titles = [
   ["/admin/logistics", "Deliveries"],
   ["/admin/transaction", "Transactions"],
   ["/admin/post-news", "Post news"],
+  ["/admin/network-posts", "Network posts"],
   ["/admin/settings", "Admins"],
   ["/admin/notifications", "Notifications"],
   ["/admin/lcis", "LCIS inmates"],
