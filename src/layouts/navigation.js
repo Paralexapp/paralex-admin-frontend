@@ -13,6 +13,7 @@ import {
   PiFolderOpen,
   PiArrowSquareOut,
   PiUsersThree,
+  PiDeviceMobile,
 } from "react-icons/pi";
 import { ADMIN_VERIFYLAWYER_URL } from "../utils/constants";
 
@@ -56,7 +57,10 @@ export const navSections = [
   },
   {
     label: "Settings",
-    items: [{ to: "/admin/settings", label: "Admins", icon: PiGearSix }],
+    items: [
+      { to: "/admin/settings", label: "Admins", icon: PiGearSix },
+      { to: "/admin/app-updates", label: "App updates", icon: PiDeviceMobile },
+    ],
   },
 ];
 
@@ -80,6 +84,7 @@ const titles = [
   ["/admin/post-news", "Post news"],
   ["/admin/network-posts", "Network posts"],
   ["/admin/settings", "Admins"],
+  ["/admin/app-updates", "App updates"],
   ["/admin/notifications", "Notifications"],
   ["/admin/lcis", "LCIS inmates"],
   ["/admin/lcis/record", "Inmate record"],

@@ -325,3 +325,13 @@ export const adminRestoreNetworkPost = async (postId) => {
 export const adminRemoveNetworkComment = async (commentId, reason) => {
     return handleAdminRequest('POST', `legal/v2/admin/network/comments/${encodeURIComponent(commentId)}/remove`, { reason });
 }
+
+/** The app version people are asked to update to, and the oldest still allowed */
+export const adminGetAppVersion = async () => {
+    return handleAdminRequest('GET', 'app/version');
+}
+
+/** Announce a new app version: { latestVersion, minVersion, message, notify } */
+export const adminSetAppVersion = async (body) => {
+    return handleAdminRequest('PUT', 'admin/app-version', body);
+}

@@ -34,6 +34,7 @@ export const router = createBrowserRouter([
           { index: true, lazy: page(() => import("./pages/Dashboard")) },
           { path: "dashboard", lazy: page(() => import("./pages/Dashboard")) },
           { path: "settings", lazy: page(() => import("./pages/AdminSettings")) },
+          { path: "app-updates", lazy: page(() => import("./pages/AppUpdates")) },
           { path: "bailbond", lazy: page(() => import("./pages/Bailbond")) },
           { path: "lawyers", lazy: page(() => import("./pages/Lawyers")) },
           { path: "add-lawyer", lazy: page(() => import("./pages/AddLawyer")) },
