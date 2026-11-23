@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { PiArrowSquareOut, PiSignOut, PiX } from 'react-icons/pi';
+import InstallAppButton from './InstallAppButton';
 import logo from '../assets/logz.png';
 import { navSections, isActive } from '../layouts/navigation';
 import { getAdminProfile } from '../api/authHelper';
@@ -77,6 +78,7 @@ export default function Sidebar({ open, setOpen, onLogout }) {
       </nav>
 
       <div className="relative border-t border-white/10 p-3">
+        <InstallAppButton />
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
           <Avatar name={admin.name} size="sm" className="!bg-white/10 !text-white" />
           <div className="min-w-0 flex-1">

@@ -1,0 +1,6 @@
+# The service worker and manifest must never be cached, or updates to them would be missed.
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
