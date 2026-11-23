@@ -157,6 +157,7 @@ const DriverProfile = () => {
               <div className="p-6">
                 <DetailList
                   items={[
+                    { label: 'Vehicle type', value: driver.vehicleType ? driver.vehicleType.charAt(0) + driver.vehicleType.slice(1).toLowerCase() : null },
                     { label: 'Has a bike', value: yesNo(driver.hasBike) },
                     { label: 'Has a rider card', value: yesNo(driver.hasRiderCard) },
                     { label: 'Bike type', value: driver.bikeType },
@@ -184,6 +185,14 @@ const DriverProfile = () => {
               </div>
             </Card>
             )}
+            <Card className="lg:col-span-2">
+              <CardHeader title="Documents" description="What the rider uploaded. Click to open full size." />
+              <div className="grid gap-4 p-6 pt-2 sm:grid-cols-3">
+                <DocTile label="Vehicle licence" url={driver.vehicleLicenseUrl} />
+                <DocTile label="Vehicle photo (with plate)" url={driver.vehiclePhotoUrl} />
+                <DocTile label="Passport photo" url={driver.passportUrl} />
+              </div>
+            </Card>
             <Card>
               <CardHeader title="Identity" description="Numbers are partly hidden." />
               <div className="p-6">
@@ -213,5 +222,31 @@ const DriverProfile = () => {
     </>
   );
 };
+
+/** One uploaded document: an image preview, or a link for a PDF. Opens full size in a new tab. */
+function DocTile({ label, url }) {
+  const ok = typeof url === 'string' && /^https:/i.test(url);
+  const isPdf = ok && /\.pdf(\?|$)/i.test(url);
+  return (
+    <div>
+      <p className="mb-2 text-sm font-medium text-stone-700">{label}</p>
+      {!ok ? (
+        <div className="flex aspect-[4/3] items-center justify-center rounded-xl bg-stone-50 text-sm text-stone-400 ring-1 ring-stone-200">
+          Not uploaded
+        </div>
+      ) : isPdf ? (
+        <a href={url} target="_blank" rel="noopener noreferrer"
+          className="flex aspect-[4/3] items-center justify-center rounded-xl bg-stone-50 text-sm font-medium text-brand-800 ring-1 ring-stone-200 hover:bg-stone-100">
+          Open PDF
+        </a>
+      ) : (
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          <img src={url} alt={label} loading="lazy"
+            className="aspect-[4/3] w-full rounded-xl object-cover ring-1 ring-stone-200 hover:opacity-90" />
+        </a>
+      )}
+    </div>
+  );
+}
 
 export default DriverProfile;
