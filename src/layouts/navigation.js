@@ -14,6 +14,7 @@ import {
   PiArrowSquareOut,
   PiUsersThree,
   PiDeviceMobile,
+  PiMapPinArea,
 } from "react-icons/pi";
 import { ADMIN_VERIFYLAWYER_URL } from "../utils/constants";
 
@@ -30,6 +31,7 @@ export const navSections = [
       { to: "/admin/lawyers", label: "Lawyers", icon: PiGavel, match: ["/admin/lawyer/", "/admin/add-lawyer"] },
       { to: "/admin/lawyer-verification", label: "Lawyer verification", icon: PiSealCheck },
       { to: "/admin/drivers", label: "Drivers", icon: PiSteeringWheel, match: ["/admin/driver/", "/admin/add-driver"] },
+      { to: "/admin/online-riders", label: "Online riders", icon: PiMapPinArea },
     ],
   },
   {
@@ -77,6 +79,7 @@ const titles = [
   ["/admin/drivers", "Drivers"],
   ["/admin/driver/", "Driver profile"],
   ["/admin/add-driver", "Add driver"],
+  ["/admin/online-riders", "Online riders"],
   ["/admin/bailbond/", "Bail bond request"],
   ["/admin/bailbond", "Bail bonds"],
   ["/admin/logistics", "Deliveries"],

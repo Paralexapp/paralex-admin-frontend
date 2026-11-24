@@ -45,6 +45,7 @@ export const router = createBrowserRouter([
           { path: "user/:userId", lazy: page(() => import("./pages/UserProfile")) },
           { path: "drivers", lazy: page(() => import("./pages/Drivers")) },
           { path: "add-driver", lazy: page(() => import("./pages/AddDriver")) },
+          { path: "online-riders", lazy: page(() => import("./pages/OnlineRiders")) },
           { path: "driver/:driverId", lazy: page(() => import("./pages/DriverProfile")) },
           { path: "notifications", lazy: page(() => import("./pages/Notifications")) },
           { path: "logistics", lazy: page(() => import("./pages/DeliveryRequest")) },

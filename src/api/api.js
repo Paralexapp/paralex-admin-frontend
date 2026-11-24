@@ -335,3 +335,8 @@ export const adminGetAppVersion = async () => {
 export const adminSetAppVersion = async (body) => {
     return handleAdminRequest('PUT', 'admin/app-version', body);
 }
+
+/** Riders switched on now and those online in the last 24 h, with last-seen time and any live job */
+export const adminGetOnlineRiders = async () => {
+    return handleAdminRequest('GET', 'delivery/v2/admin/riders/online');
+}
