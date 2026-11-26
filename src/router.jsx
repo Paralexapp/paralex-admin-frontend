@@ -3,6 +3,7 @@ import RootLayout from "./layouts/RootLayout";
 import AdminProtectedRoute from "./layouts/AdminProtectedRoute";
 import SignIn from "./auth/SiginIn";
 import ErrorPage from "./pages/ErrorPage";
+import RouteError from "./pages/RouteError";
 import DashboardLayout from "./layouts/DashboardLayout";
 
 // Pages load on demand so the sign-in screen doesn't ship the charts, PDF tooling, etc.
@@ -12,6 +13,8 @@ export const router = createBrowserRouter([
   {
     // Root layout hosts the app-wide toast container
     element: <RootLayout />,
+    // A page that fails to load (e.g. an open tab after a deploy) reloads instead of showing a crash screen
+    errorElement: <RouteError />,
     // First paint while the initial page chunk loads
     hydrateFallbackElement: <div className="min-h-dvh bg-stone-50" />,
     children: [
